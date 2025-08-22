@@ -1,0 +1,9 @@
+vars_sensitive.yaml
+
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan.out
+terraform.tfvars
+terraform.tfvars.json

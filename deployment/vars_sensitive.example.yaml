@@ -1,0 +1,15 @@
+terraform:
+  backend_config:
+    username: haond
+    password: your-gitlab-pat
+  tfvars:
+    cloudflare:
+      api_token: your-cf-token # (needs permission to edit dns zones)
+      domains:
+        your-domain.com:
+          zone_id: your-cf-zone-id
+          records:
+            - name: your-domain.com
+              type: A
+              proxied: true
+              content: your-server-ip
