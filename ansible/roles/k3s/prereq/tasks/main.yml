@@ -58,14 +58,69 @@
         force: true
         state: link
 
+- name: Set up kube-vip on first node
+  when: inventory_hostname == groups[target_hosts][0] or ansible_host == groups[target_hosts][0]
+  block:
+    - name: Create manifests directory
+      ansible.builtin.file:
+        path: /var/lib/rancher/k3s/server/manifests
+        state: directory
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Download vip cloud provider manifest
+      ansible.builtin.get_url:
+        url: https://kube-vip.io/manifests/rbac.yaml
+        dest: /var/lib/rancher/k3s/server/manifests/kube-vip-rbac.yaml
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Get latest kube-vip version
+      ansible.builtin.uri:
+        url: https://api.github.com/repos/kube-vip/kube-vip/releases/latest
+        return_content: yes
+      register: kube_vip_release
+
+    - name: Get default network interface
+      ansible.builtin.set_fact:
+        node_interface: "{{ ansible_default_ipv4.interface }}"
+
+    - name: Generate kube-vip DaemonSet manifest
+      ansible.builtin.shell: |
+        docker run --network host --rm ghcr.io/kube-vip/kube-vip:{{ (kube_vip_release.content | from_json).name }} manifest daemonset \
+            --interface {{ node_interface }} \
+            --address {{ k3s_cluster_control_plane_ip }} \
+            --inCluster \
+            --taint \
+            --controlplane \
+            --services \
+            --arp \
+            --leaderElection
+      delegate_to: localhost
+      become: false
+      register: kube_vip_daemonset
+      changed_when: false
+
+    - name: Write kube-vip DaemonSet manifest
+      ansible.builtin.copy:
+        content: "{{ kube_vip_daemonset.stdout }}"
+        dest: /var/lib/rancher/k3s/server/manifests/kube-vip-daemonset.yaml
+        owner: root
+        group: root
+        mode: "0644"
+
 - name: Setup extra manifests
   when: k3s_extra_manifests is defined
   block:
     - name: Make manifests directory
       ansible.builtin.file:
-        path: "/var/lib/rancher/k3s/server/manifests"
-        mode: "0700"
+        path: /var/lib/rancher/k3s/server/manifests
         state: directory
+        owner: root
+        group: root
+        mode: "0644"
     - name: Copy manifests
       ansible.builtin.copy:
         src: "{{ item }}"
