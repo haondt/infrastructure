@@ -9,3 +9,32 @@ terraform:
   tfvars:
     cloudflare:
       domains:
+ssh:
+  public_keys: &public_keys
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINjSDZ49g0G2wpeTUe66hT5/bNlHt37Z+gEg7JZf/67f haondt@aurora
+
+ansible:
+  inventory:
+    k3s_clusters:
+      children:
+        marble:
+          hosts:
+            marble-1:
+              ansible_host: 192.168.1.131
+            marble-2:
+              ansible_host: 192.168.1.175
+            marble-3:
+              ansible_host: 192.168.1.149
+          vars:
+            ansible_user: marble
+            ansible_ssh_private_key_file: build/id_rsa
+            k3s_version: v1.33.3+k3s1
+            k3s_node_name: "{{ inventory_hostname }}"
+            k3s_node_ip: "{{ ansible_host }}"
+            k3s_server_config_yaml: |
+              node-ip: {{ ansible_host }}
+              disable: traefik,servicelb
+  vars:
+    ssh:
+      public_keys: *public_keys
+  group_vars: {}

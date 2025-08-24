@@ -1,0 +1,14 @@
+---
+- name: Reboot K3s Cluster Nodes
+  hosts: "{{ target_hosts }}"
+  become: true
+  gather_facts: true
+  serial: 1
+  
+  tasks:
+    - name: Reboot node and wait for K3s to be ready
+      ansible.builtin.reboot:
+        test_command: kubectl get nodes
+        reboot_timeout: 600
+        connect_timeout: 5
+        msg: "Reboot initiated by Ansible for K3s cluster maintenance"

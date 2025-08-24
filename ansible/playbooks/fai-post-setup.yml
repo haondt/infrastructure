@@ -1,0 +1,103 @@
+---
+- name: FAI Post-Installation Node Configuration
+  hosts: "{{ target_hosts }}"
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Verify target_hosts variable is provided
+      fail:
+        msg: "You must specify target_hosts. Example: -e target_hosts=marbles"
+      when: target_hosts is not defined
+      run_once: true
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: yes
+        autoremove: yes
+        autoclean: yes
+      register: upgrade_result
+
+    - name: Check if reboot required
+      stat:
+        path: /var/run/reboot-required get_md5=no
+      register: reboot_required_file
+
+    - name: Display upgrade summary
+      debug:
+        msg: |
+          Packages upgraded: {{ upgrade_result.stdout_lines | length if upgrade_result.stdout_lines is defined else 0 }}
+          Reboot required: {{ reboot_required_file.stat.exists }}
+
+    - name: Install and configure NTP
+      apt:
+        name: systemd-timesyncd
+        state: present
+
+    - name: Enable NTP synchronization
+      systemd:
+        name: systemd-timesyncd
+        enabled: yes
+        state: started
+
+    - name: Force time sync
+      command: timedatectl set-ntp true
+      changed_when: false
+
+
+    - name: Set hostname to inventory name
+      hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Update /etc/hosts with hostname
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: "127.0.1.1       {{ inventory_hostname }}"
+        insertafter: '^127\.0\.0\.1.*localhost'
+
+    - name: Create wheel group
+      group:
+        name: wheel
+        state: present
+
+    - name: Create haondt group
+      group:
+        name: haondt
+        state: present
+
+    - name: Allow 'wheel' group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+
+    - name: Add ansible_user to wheel and haondt groups
+      user:
+        name: "{{ ansible_user }}"
+        groups: wheel,haondt
+        append: yes
+
+    - name: Add SSH public keys for ansible_user
+      authorized_key:
+        user: "{{ ansible_user }}"
+        key: "{{ item }}"
+        state: present
+      loop: "{{ ssh.public_keys }}"
+
+    - name: Reboot if required
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel/system updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+      when: reboot_required_file.stat.exists
+

@@ -1,15 +1,29 @@
+ssh:
+  private_key: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    ...
+    -----END OPENSSH PRIVATE KEY-----
+
 terraform:
   backend_config:
     username: haond
     password: your-gitlab-pat
   tfvars:
     cloudflare:
-      api_token: your-cf-token # (needs permission to edit dns zones)
+      api_token: your-cf-api-token (needs dns zone edit)
       domains:
-        your-domain.com:
+        aeeo.com:
           zone_id: your-cf-zone-id
           records:
-            - name: your-domain.com
+            - name: aeeo.com
               type: A
               proxied: true
               content: your-server-ip
+
+ansible:
+  inventory:
+    k3s_clusters:
+      children:
+        marble:
+          vars:
+            k3s_token: your-k3s-token (md rnd 64 -t hex | clip)

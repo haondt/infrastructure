@@ -1,0 +1,13 @@
+- name: Cluster prep
+  hosts: "{{ target_hosts }}"
+  become: true
+  gather_facts: true
+  roles:
+    - role: k3s/prereq
+
+
+- name: Install K3S servers
+  hosts: "{{ target_hosts }}"
+  become: true
+  roles:
+    - role: k3s/server-install
