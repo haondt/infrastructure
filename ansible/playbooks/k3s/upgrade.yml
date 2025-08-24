@@ -1,0 +1,9 @@
+---
+# Servers should be restarted sequientally to avoid etcd learner issues
+# Agents have no such limitation
+- name: Upgrade K3s Servers
+  hosts: "{{ target_hosts }}"
+  become: true
+  serial: 1
+  roles:
+    - role: k3s/upgrade

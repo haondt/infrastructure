@@ -117,3 +117,15 @@ a-k3s-reset: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 		--extra-vars "@../deployment/$(GENERATED_ANSIBLE_VARS)" \
 		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
 	    -e target_hosts=$(TARGET)
+
+a-k3s-upgrade: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
+	@if [ -z "$(TARGET)" ]; then \
+		echo "ERROR: TARGET is required. Usage: make a-fai-setup TARGET=marble"; \
+		exit 1; \
+	fi
+	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)
+	@$(MAKE) $(GENERATED_GROUP_VARS) TARGET=$(TARGET)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/upgrade.yml \
+		--extra-vars "@../deployment/$(GENERATED_ANSIBLE_VARS)" \
+		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
+	    -e target_hosts=$(TARGET)

@@ -51,3 +51,8 @@ Reset/uninstall K3s cluster
 ```bash
 make a-k3s-reset TARGET=marble
 ```
+
+Upgrade K3s cluster
+```bash
+make a-k3s-upgrade TARGET=marble
+```
