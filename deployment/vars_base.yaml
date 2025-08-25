@@ -1,14 +1,32 @@
 terraform:
-  backend_config:
-    address: https://gitlab.com/api/v4/projects/68409780/terraform/state/default
-    lock_address: https://gitlab.com/api/v4/projects/68409780/terraform/state/default/lock
-    unlock_address: https://gitlab.com/api/v4/projects/68409780/terraform/state/default/lock
-    lock_method: POST
-    unlock_method: DELETE
-    retry_wait_min: 5
-  tfvars:
-    cloudflare:
-      domains:
+  default:
+    backend_config: &tf_backend
+      address: https://gitlab.com/api/v4/projects/68409780/terraform/state/default
+      lock_address: https://gitlab.com/api/v4/projects/68409780/terraform/state/default/lock
+      unlock_address: https://gitlab.com/api/v4/projects/68409780/terraform/state/default/lock
+      lock_method: POST
+      unlock_method: DELETE
+      retry_wait_min: 5
+    tfvars:
+      cloudflare:
+        domains:
+  clusters:
+    backend_config:
+      <<: *tf_backend
+      address: https://gitlab.com/api/v4/projects/68409780/terraform/state/clusters
+      lock_address: https://gitlab.com/api/v4/projects/68409780/terraform/state/clusters/lock
+      unlock_address: https://gitlab.com/api/v4/projects/68409780/terraform/state/clusters/lock
+    tfvars:
+      clusters:
+        marble:
+          cluster_ip: 192.168.1.100
+          service_accounts:
+            gitlab-deployments-runner:
+            roles:
+              - deployer
+
+
+
 ssh:
   public_keys: &public_keys
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINjSDZ49g0G2wpeTUe66hT5/bNlHt37Z+gEg7JZf/67f haondt@aurora
@@ -39,6 +57,12 @@ ansible:
               tls-san:
                 - {{ k3s_cluster_control_plane_ip }}
             k3s_extra_server_args: "--secrets-encryption"
+            kubernetes:
+              service_accounts:
+                gitlab-deployments-runner:
+                  # namespace: ansible-managed
+                  roles:
+                    - cluster_admin
 
   vars:
     ssh:

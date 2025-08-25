@@ -1,0 +1,6 @@
+---
+- name: Ensure python3-kubernetes is installed
+  become: true
+  package:
+    name: python3-kubernetes
+    state: present

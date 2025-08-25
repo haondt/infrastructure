@@ -1,0 +1,24 @@
+---
+- name: Set defaults
+  hosts: "{{ target_hosts }}"
+  vars:
+    kubernetes_defaults:
+      kubeconfig: "~/.kube/config"
+      default_namespace: ansible-managed
+  tasks:
+    - set_fact:
+        kubernetes: "{{ kubernetes_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Add Python deps
+  hosts: "{{ target_hosts }}"
+  roles:
+    - role: kubernetes/python-kubernetes
+
+- name: Configure Kubernetes cluster
+  hosts: "{{ target_hosts }}"
+  # become: true
+  # serial: 1
+  roles:
+    - role: kubernetes/configure-namespaces
+    - role: kubernetes/configure-service-accounts
+    - role: kubernetes/configure-cluster-role-bindings

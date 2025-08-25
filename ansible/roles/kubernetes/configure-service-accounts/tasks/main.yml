@@ -1,0 +1,13 @@
+---
+- name: Create service accounts
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: "{{ item.key }}"
+        namespace: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
+  loop: "{{ kubernetes.service_accounts | dict2items }}"
+
