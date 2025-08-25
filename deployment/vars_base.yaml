@@ -38,6 +38,7 @@ ansible:
               disable: traefik,servicelb
               tls-san:
                 - {{ k3s_cluster_control_plane_ip }}
+            k3s_extra_server_args: "--secrets-encryption"
 
   vars:
     ssh:
