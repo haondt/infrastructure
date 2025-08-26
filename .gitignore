@@ -4,7 +4,7 @@ vars_sensitive.yaml
 *.tfstate
 *.tfstate.*
 *.tfplan
-tfplan.out
-*.tfplan.out
+tfplan.*
+*.tfplan.*
 terraform.tfvars
 terraform.tfvars.json
