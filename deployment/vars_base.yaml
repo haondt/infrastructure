@@ -1,3 +1,8 @@
+x-shared:
+  marble:
+    cluster_ip: &marble_cluster_ip 192.168.1.100
+
+
 terraform:
   default:
     backend_config: &tf_backend
@@ -19,7 +24,7 @@ terraform:
     tfvars:
       clusters:
         marble:
-          cluster_ip: 192.168.1.100
+          cluster_ip: *marble_cluster_ip
           service_accounts:
             gitlab-deployments-runner:
             roles:
@@ -49,7 +54,7 @@ ansible:
             k3s_version: v1.33.3+k3s1
             k3s_node_name: "{{ inventory_hostname }}"
             k3s_node_ip: "{{ ansible_host }}"
-            k3s_cluster_ip: 192.168.1.100
+            k3s_cluster_ip:  *marble_cluster_ip
             k3s_cluster_control_plane_ip: "{{ k3s_cluster_ip }}"
             k3s_server_config_yaml: |
               node-ip: {{ ansible_host }}
@@ -58,13 +63,14 @@ ansible:
                 - {{ k3s_cluster_control_plane_ip }}
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
+              cluster_ip: *marble_cluster_ip
               service_accounts:
                 gitlab-deployments-runner:
-                  # namespace: ansible-managed
                   roles:
-                    - cluster_admin
+                    - cluster-admin
 
   vars:
     ssh:
       public_keys: *public_keys
+
   group_vars: {}

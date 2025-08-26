@@ -16,9 +16,9 @@
 
 - name: Configure Kubernetes cluster
   hosts: "{{ target_hosts }}"
-  # become: true
-  # serial: 1
+  run_once: true
   roles:
     - role: kubernetes/configure-namespaces
     - role: kubernetes/configure-service-accounts
     - role: kubernetes/configure-cluster-role-bindings
+    - role: kubernetes/configure-service-account-tokens

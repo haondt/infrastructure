@@ -8,5 +8,7 @@
       kind: Namespace
       metadata:
         name: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
+        labels:
+          managed-by: ansible
   loop: "{{ kubernetes.service_accounts | dict2items }}"
 

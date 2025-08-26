@@ -9,5 +9,7 @@
       metadata:
         name: "{{ item.key }}"
         namespace: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
+        labels:
+          managed-by: ansible
   loop: "{{ kubernetes.service_accounts | dict2items }}"
 

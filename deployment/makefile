@@ -33,7 +33,9 @@ $(GENERATED_GROUP_TFVARS_JSON): $(COMBINED_VARS)
 
 $(GENERATED_ANSIBLE_VARS): $(COMBINED_VARS)
 	@echo "Generating $(GENERATED_ANSIBLE_VARS)"
-	@yq eval '.ansible.vars' $(COMBINED_VARS) > $@
+	@mkdir -p artifacts/ansible
+	@yq eval '.ansible.vars' $(COMBINED_VARS) | \
+		yq eval '.haondt.artifacts = "$(shell pwd)/artifacts/ansible"' - > $@
 
 $(GENERATED_GROUP_VARS): $(COMBINED_VARS)
 	@echo "Generating $(GENERATED_GROUP_VARS)"
@@ -121,6 +123,14 @@ a-k8s-configure: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTOR
 	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)
 	@$(MAKE) $(GENERATED_GROUP_VARS) TARGET=$(TARGET)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/kubernetes/configure.yml \
+		--extra-vars "@../deployment/$(GENERATED_ANSIBLE_VARS)" \
+		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
+	    -e target_hosts=$(TARGET)
+
+a-k8s-reset: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
+	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)
+	@$(MAKE) $(GENERATED_GROUP_VARS) TARGET=$(TARGET)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/kubernetes/reset.yml \
 		--extra-vars "@../deployment/$(GENERATED_ANSIBLE_VARS)" \
 		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
 	    -e target_hosts=$(TARGET)

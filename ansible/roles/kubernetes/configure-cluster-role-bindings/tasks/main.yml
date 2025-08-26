@@ -8,6 +8,8 @@
       kind: ClusterRoleBinding
       metadata:
         name: "{{ item.key }}-binding"
+        labels:
+          managed-by: ansible
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole

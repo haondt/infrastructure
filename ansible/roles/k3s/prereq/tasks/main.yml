@@ -98,7 +98,7 @@
             --services \
             --arp \
             --leaderElection
-      delegate_to: localhost
+      delegate_to: 127.0.0.1
       become: false
       register: kube_vip_daemonset
       changed_when: false

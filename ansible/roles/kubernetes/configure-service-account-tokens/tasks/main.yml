@@ -1,0 +1,51 @@
+---
+- name: Create ServiceAccount tokens
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ item.key }}-token"
+        namespace: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
+        labels:
+          managed-by: ansible
+        annotations:
+          kubernetes.io/service-account.name: "{{ item.key }}"
+      type: kubernetes.io/service-account-token
+  loop: "{{ kubernetes.service_accounts | dict2items }}"
+
+- name: Extract tokens
+  k8s_info:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    api_version: v1
+    kind: Secret
+    name: "{{ item.key }}-token"
+    namespace: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
+  register: token_secrets
+  loop: "{{ kubernetes.service_accounts | dict2items }}"
+
+- name: Generate kubeconfig files for service accounts
+  template:
+    src: kubeconfig.j2
+    dest: "{{ haondt.artifacts }}/{{ item.item.key }}-kubeconfig.yaml"
+  vars:
+    sa_config:
+      service_account_name: "{{ item.item.key }}"
+      namespace: "{{ item.item.value.namespace | default(kubernetes.default_namespace) }}"
+      token: "{{ item.resources[0].data.token | b64decode }}"
+      ca_cert: "{{ item.resources[0].data['ca.crt'] | b64decode }}"
+  loop: "{{ token_secrets.results }}"
+  when: item.resources | length > 0
+  delegate_to: localhost
+
+- name: Display generated kubeconfig files
+  debug:
+    msg: |
+      Generated kubeconfig files at {{ haondt.artifacts }}:
+      {% for result in token_secrets.results %}
+      {% if result.resources | length > 0 %}
+      {{ result.item.key }}-kubeconfig.yaml (SA:{{ result.item.key }}, NS:{{ result.item.value.namespace | default(kubernetes.default_namespace) }})
+      {% endif %}
+      {% endfor %}

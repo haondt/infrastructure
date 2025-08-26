@@ -37,6 +37,8 @@ The `a-fai-setup` command:
 - Requires the target host(s) to already have your SSH public key installed
 - Requires the ansible user to already be in the sudoers group
 
+### K3s Commands
+
 Install K3s cluster
 ```bash
 make a-k3s-install TARGET=marble
@@ -55,4 +57,19 @@ make a-k3s-reset TARGET=marble
 Upgrade K3s cluster
 ```bash
 make a-k3s-upgrade TARGET=marble
+```
+
+### Kubernetes Configuration Commands
+
+Configure Kubernetes resources (service accounts, RBAC, namespaces)
+```bash
+make a-k8s-configure TARGET=marble
+```
+
+After running `a-k8s-configure`, you'll find kubeconfig files in `deployment/artifacts/ansible/`:
+- `{service-account-name}-kubeconfig.yaml` - Ready to use in CI/CD pipelines
+
+Remove all Ansible-managed Kubernetes resources
+```bash
+make a-k8s-reset TARGET=marble
 ```

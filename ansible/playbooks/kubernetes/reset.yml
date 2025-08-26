@@ -1,0 +1,27 @@
+---
+- name: Set defaults
+  hosts: "{{ target_hosts }}"
+  vars:
+    kubernetes_defaults:
+      kubeconfig: "~/.kube/config"
+  tasks:
+    - set_fact:
+        kubernetes: "{{ kubernetes_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Clean up Kubernetes resources managed by Ansible
+  hosts: "{{ target_hosts }}"
+  run_once: true
+  become: true
+  tasks:
+    - name: Delete all Ansible-managed resources
+      shell: |
+        kubectl delete \
+          clusterrolebindings,secrets,serviceaccounts,namespaces \
+          -l managed-by=ansible \
+          -A \
+          --ignore-not-found=true
+      register: cleanup_result
+
+    - name: Show cleanup results
+      debug:
+        msg: "{{ cleanup_result.stdout }}"
