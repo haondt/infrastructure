@@ -59,11 +59,14 @@ ansible:
             k3s_server_config_yaml: |
               node-ip: {{ ansible_host }}
               disable: traefik,servicelb
+              flannel-backend: none
+              disable-network-policy: true
               tls-san:
                 - {{ k3s_cluster_control_plane_ip }}
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
               cluster_ip: *marble_cluster_ip
+              install_calico: true
               service_accounts:
                 gitlab-deployments-runner:
                   roles:

@@ -16,7 +16,14 @@
     - name: Delete all Ansible-managed resources
       shell: |
         kubectl delete \
-          clusterrolebindings,secrets,serviceaccounts,namespaces \
+          pods,services,deployments,replicasets,statefulsets,daemonsets,jobs,cronjobs,\
+          persistentvolumeclaims,secrets,configmaps,serviceaccounts,\
+          roles,rolebindings,clusterroles,clusterrolebindings,\
+          networkpolicies,ingresses,\
+          customresourcedefinitions,\
+          installations.operator.tigera.io,\
+          tigerastatuses.operator.tigera.io,\
+          namespaces \
           -l managed-by=ansible \
           -A \
           --ignore-not-found=true

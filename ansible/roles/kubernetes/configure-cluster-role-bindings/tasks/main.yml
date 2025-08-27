@@ -1,4 +1,5 @@
 ---
+
 - name: Create ClusterRoleBindings for service accounts
   k8s:
     kubeconfig: "{{ kubernetes.kubeconfig }}"

@@ -1,14 +1,4 @@
 ---
-- name: Set defaults
-  hosts: "{{ target_hosts }}"
-  vars:
-    kubernetes_defaults:
-      kubeconfig: "~/.kube/config"
-      default_namespace: ansible-managed
-  tasks:
-    - set_fact:
-        kubernetes: "{{ kubernetes_defaults | combine(kubernetes, recursive=True) }}"
-
 - name: Add Python deps
   hosts: "{{ target_hosts }}"
   roles:
@@ -18,6 +8,8 @@
   hosts: "{{ target_hosts }}"
   run_once: true
   roles:
+    - role: kubernetes/install-calico
+      when: kubernetes.install_calico | default(false)
     - role: kubernetes/configure-namespaces
     - role: kubernetes/configure-service-accounts
     - role: kubernetes/configure-cluster-role-bindings

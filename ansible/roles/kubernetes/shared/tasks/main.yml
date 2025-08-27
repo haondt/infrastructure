@@ -1,0 +1,4 @@
+---
+- name: Set shared role defaults
+  set_fact:
+    kubernetes: "{{ shared_role_defaults | combine(kubernetes, recursive=True) }}"
