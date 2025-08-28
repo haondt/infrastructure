@@ -2,5 +2,13 @@
 shared_role_defaults:
   kubeconfig: "~/.kube/config"
   default_namespace: ansible-managed
-  install_calico: false
+  calico:
+    enabled: false
+  ingress_nginx:
+    enabled: false
+    node_port:
+      enabled: false
+      http: 30080
+      https: 30443
+    enable_ssl_passthrough: false
 role_defaults:

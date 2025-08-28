@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ kubernetes.ingress_nginx.version }}/deploy/static/provider/cloud/deploy.yaml
+
+commonLabels:
+  managed-by: ansible
+
+{% if kubernetes.ingress_nginx.node_port is defined and kubernetes.ingress_nginx.node_port.enabled %}
+patches:
+- target:
+    kind: Service
+    name: ingress-nginx-controller
+    namespace: ingress-nginx
+  patch: |-
+    - op: replace
+      path: /spec/type
+      value: NodePort
+    - op: remove
+      path: /spec/externalTrafficPolicy
+{% if kubernetes.ingress_nginx.node_port.http is defined %}
+    - op: add
+      path: /spec/ports/0/nodePort
+      value: {{ kubernetes.ingress_nginx.node_port.http }}
+{% endif %}
+{% if kubernetes.ingress_nginx.node_port.https is defined %}
+    - op: add
+      path: /spec/ports/1/nodePort
+      value: {{ kubernetes.ingress_nginx.node_port.https }}
+{% endif %}
+{% endif %}
+
+{% if kubernetes.ingress_nginx.enable_ssl_passthrough %}
+- target:
+    kind: Deployment
+    name: ingress-nginx-controller
+    namespace: ingress-nginx
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --enable-ssl-passthrough
+{% endif %}

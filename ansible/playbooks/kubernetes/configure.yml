@@ -9,7 +9,9 @@
   run_once: true
   roles:
     - role: kubernetes/install-calico
-      when: kubernetes.install_calico | default(false)
+      when: kubernetes.calico.enabled
+    - role: kubernetes/install-ingress-nginx
+      when: kubernetes.ingress_nginx.enabled
     - role: kubernetes/configure-namespaces
     - role: kubernetes/configure-service-accounts
     - role: kubernetes/configure-cluster-role-bindings
