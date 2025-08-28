@@ -1,7 +1,8 @@
 x-shared:
   marble:
     cluster_ip: &marble_cluster_ip 192.168.1.100
-
+    ingress_ip: &marble_ingress_ip 192.168.1.101
+    load_balancer_ip_range: &load_balancer_ip_range 192.168.1.101-192.168.1.110
 
 terraform:
   default:
@@ -69,14 +70,18 @@ ansible:
               cluster_ip: *marble_cluster_ip
               calico:
                 enabled: true
+              kube_vip_cloud_controller:
+                enabled: true
+                ip_address_ranges:
+                  global:
+                    range: *load_balancer_ip_range
               ingress_nginx:
+                load_balancer_ip: *marble_ingress_ip
                 enabled: true
                 node_port:
-                  enabled: true
+                  enabled: false
                   http: 30080
                   https: 30443
-
-                service_type: NodePort
               service_accounts:
                 gitlab-deployments-runner:
                   roles:

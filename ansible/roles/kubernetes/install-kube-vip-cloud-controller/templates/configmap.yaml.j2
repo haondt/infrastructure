@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubevip
+  namespace: kube-system
+data:
+{% if kubernetes.kube_vip_cloud_controller.ip_address_ranges.global.cidr is defined %}
+  cidr-global: {{ kubernetes.kube_vip_cloud_controller.ip_address_ranges.global.cidr }}
+{% elif kubernetes.kube_vip_cloud_controller.ip_address_ranges.global.range is defined %}
+  range-global: {{ kubernetes.kube_vip_cloud_controller.ip_address_ranges.global.range }}
+{% endif %}
+{% if kubernetes.kube_vip_cloud_controller.ip_address_ranges.namespaced is defined %}
+{% for namespace, config in kubernetes.kube_vip_cloud_controller.ip_address_ranges.namespaced.items() %}
+{% if config.cidr is defined %}
+  cidr-{{ namespace }}: {{ config.cidr }}
+{% elif config.range is defined %}
+  range-{{ namespace }}: {{ config.range }}
+{% endif %}
+{% endfor %}
+{% endif %}

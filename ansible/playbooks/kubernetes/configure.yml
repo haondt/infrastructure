@@ -10,6 +10,8 @@
   roles:
     - role: kubernetes/install-calico
       when: kubernetes.calico.enabled
+    - role: kubernetes/install-kube-vip-cloud-controller
+      when: kubernetes.kube_vip_cloud_controller.enabled
     - role: kubernetes/install-ingress-nginx
       when: kubernetes.ingress_nginx.enabled
     - role: kubernetes/configure-namespaces

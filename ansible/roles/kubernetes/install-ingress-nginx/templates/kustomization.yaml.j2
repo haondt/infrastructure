@@ -7,13 +7,19 @@ resources:
 commonLabels:
   managed-by: ansible
 
-{% if kubernetes.ingress_nginx.node_port is defined and kubernetes.ingress_nginx.node_port.enabled %}
 patches:
+{% if kubernetes.ingress_nginx.load_balancer_ip is defined or (kubernetes.ingress_nginx.node_port is defined and kubernetes.ingress_nginx.node_port.enabled) %}
 - target:
     kind: Service
     name: ingress-nginx-controller
     namespace: ingress-nginx
   patch: |-
+{% if kubernetes.ingress_nginx.load_balancer_ip is defined %}
+    - op: add
+      path: /spec/loadBalancerIP
+      value: {{ kubernetes.ingress_nginx.load_balancer_ip }}
+{% endif %}
+{% if kubernetes.ingress_nginx.node_port is defined and kubernetes.ingress_nginx.node_port.enabled %}
     - op: replace
       path: /spec/type
       value: NodePort
@@ -28,6 +34,7 @@ patches:
     - op: add
       path: /spec/ports/1/nodePort
       value: {{ kubernetes.ingress_nginx.node_port.https }}
+{% endif %}
 {% endif %}
 {% endif %}
 

@@ -54,5 +54,5 @@
       {% for port in ingress_service.resources[0].spec.ports %}
       - {{ port.name }}: {{ kubernetes.cluster_ip }}:{{ port.nodePort }} ({{ port.protocol }}/{{ port.port }})
       {% endfor %}
-  when: kubernetes.ingress_nginx.service_type == "NodePort"
+  when: kubernetes.ingress_nginx.node_port.enabled
 

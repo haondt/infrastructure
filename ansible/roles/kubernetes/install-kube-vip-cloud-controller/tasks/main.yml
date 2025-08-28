@@ -1,0 +1,44 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Template kube-vip-cloud-controller kustomization
+  template:
+    src: kustomization.yaml.j2
+    dest: "{{ haondt.artifacts }}/kustomization.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Template kube-vip-cloud-controller configmap
+  template:
+    src: configmap.yaml.j2
+    dest: "{{ haondt.artifacts }}/configmap.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Build kube-vip-cloud-controller manifests with kustomize
+  shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone
+  register: kube_vip_cloud_controller_manifests
+  delegate_to: 127.0.0.1
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+- name: Apply kube-vip-cloud-controller manifests
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    definition: "{{ kube_vip_cloud_controller_manifests.stdout | from_yaml_all }}"
+  delegate_to: 127.0.0.1
+
+- name: Wait for kube-vip-cloud-controller to be ready
+  k8s_info:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    api_version: apps/v1
+    kind: Deployment
+    name: kube-vip-cloud-provider
+    namespace: kube-system
+    wait: true
+    wait_condition:
+      type: Available
+      status: "True"
+    wait_timeout: 300
+  delegate_to: 127.0.0.1

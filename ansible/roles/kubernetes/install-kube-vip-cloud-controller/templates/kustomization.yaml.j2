@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/{{ kubernetes.kube_vip_cloud_controller.version }}/manifest/kube-vip-cloud-controller.yaml
+  - configmap.yaml
+
+commonLabels:
+  managed-by: ansible
