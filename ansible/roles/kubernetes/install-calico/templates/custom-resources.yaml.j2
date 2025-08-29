@@ -5,7 +5,7 @@ kind: Installation
 metadata:
   name: default
   labels:
-    managed-by: ansible
+    infra.haondt.dev/managed-by: ansible
 spec:
   # Configures Calico networking.
   calicoNetwork:
@@ -26,7 +26,7 @@ kind: APIServer
 metadata:
   name: default
   labels:
-    managed-by: ansible
+    infra.haondt.dev/managed-by: ansible
 spec: {}
 
 ---
@@ -37,7 +37,7 @@ kind: Goldmane
 metadata:
   name: default
   labels:
-    managed-by: ansible
+    infra.haondt.dev/managed-by: ansible
 
 ---
 
@@ -47,4 +47,4 @@ kind: Whisker
 metadata:
   name: default
   labels:
-    managed-by: ansible
+    infra.haondt.dev/managed-by: ansible

@@ -14,7 +14,7 @@
   become: true
   tasks:
     - name: Delete all Ansible-managed resources
-      shell: kubectl delete pods,services,deployments,replicasets,statefulsets,daemonsets,jobs,cronjobs,persistentvolumeclaims,secrets,configmaps,serviceaccounts,roles,rolebindings,clusterroles,clusterrolebindings,networkpolicies,ingresses,customresourcedefinitions,installations.operator.tigera.io,namespaces -l managed-by=ansible -A --ignore-not-found=true
+      shell: kubectl delete pods,services,deployments,replicasets,statefulsets,daemonsets,jobs,cronjobs,persistentvolumeclaims,secrets,configmaps,serviceaccounts,roles,rolebindings,clusterroles,clusterrolebindings,networkpolicies,ingresses,customresourcedefinitions,installations.operator.tigera.io,namespaces -l infra.haondt.dev/managed-by=ansible -A --ignore-not-found=true
       register: cleanup_result
 
     - name: Show cleanup results

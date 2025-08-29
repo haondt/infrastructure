@@ -5,7 +5,7 @@ resources:
   - https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ kubernetes.ingress_nginx.version }}/deploy/static/provider/cloud/deploy.yaml
 
 commonLabels:
-  managed-by: ansible
+  infra.haondt.dev/managed-by: ansible
 
 patches:
 {% if kubernetes.ingress_nginx.load_balancer_ip is defined or (kubernetes.ingress_nginx.node_port is defined and kubernetes.ingress_nginx.node_port.enabled) %}

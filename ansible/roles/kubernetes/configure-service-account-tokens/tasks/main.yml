@@ -10,7 +10,7 @@
         name: "{{ item.key }}-token"
         namespace: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
         labels:
-          managed-by: ansible
+          infra.haondt.dev/managed-by: ansible
         annotations:
           kubernetes.io/service-account.name: "{{ item.key }}"
       type: kubernetes.io/service-account-token
