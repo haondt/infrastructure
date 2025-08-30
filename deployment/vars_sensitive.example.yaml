@@ -10,7 +10,7 @@ terraform:
     password: your-gitlab-pat
   tfvars:
     cloudflare:
-      api_token: your-cf-api-token (needs dns zone edit)
+      api_token: &cf_api_token your-cf-api-token (needs dns zone edit)
       domains:
         aeeo.com:
           zone_id: your-cf-zone-id
@@ -27,3 +27,8 @@ ansible:
         marble:
           vars:
             k3s_token: your-k3s-token (md rnd 64 -t hex | clip)
+            kubernetes:
+              cert_manager:
+                acme_email: &acme_email email@domain.com
+                cloudflare_email: *acme_email
+                cloudflare_api_token: *cf_api_token

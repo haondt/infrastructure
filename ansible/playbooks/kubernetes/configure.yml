@@ -14,6 +14,8 @@
       when: kubernetes.kube_vip_cloud_controller.enabled
     - role: kubernetes/install-ingress-nginx
       when: kubernetes.ingress_nginx.enabled
+    - role: kubernetes/install-cert-manager
+      when: kubernetes.cert_manager.enabled
     - role: kubernetes/configure-namespaces
     - role: kubernetes/configure-service-accounts
     - role: kubernetes/configure-cluster-role-bindings

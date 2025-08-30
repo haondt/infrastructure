@@ -1,6 +1,7 @@
 ---
 shared_role_defaults:
   kubeconfig: "~/.kube/config"
+  context: "default"
   default_namespace: ansible-managed
   calico:
     enabled: false

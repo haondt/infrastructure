@@ -16,6 +16,7 @@ terraform:
     tfvars:
       cloudflare:
         domains:
+
   clusters:
     backend_config:
       <<: *tf_backend
@@ -67,6 +68,8 @@ ansible:
                 - {{ k3s_cluster_control_plane_ip }}
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
+              kubeconfig: "~/.kube/config"
+              context: "marble"
               cluster_ip: *marble_cluster_ip
               calico:
                 enabled: true
@@ -82,6 +85,8 @@ ansible:
                   enabled: false
                   http: 30080
                   https: 30443
+              cert_manager:
+                enabled: true
               service_accounts:
                 gitlab-deployments-runner:
                   roles:

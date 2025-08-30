@@ -1,0 +1,83 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install cert-manager via Helm (OCI chart)
+  kubernetes.core.helm:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    name: cert-manager
+    chart_ref: oci://quay.io/jetstack/charts/cert-manager
+    chart_version: "{{ kubernetes.cert_manager.version }}"
+    release_namespace: "{{ kubernetes.cert_manager.namespace }}"
+    create_namespace: true
+    values:
+      crds:
+        enabled: true
+      global:
+        commonLabels:
+          infra.haondt.dev/managed-by: ansible
+        prometheus:
+          enabled: false
+  delegate_to: 127.0.0.1
+
+- name: Create Cloudflare API token secret
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "cloudflare-api-token"
+        namespace: "{{ kubernetes.cert_manager.namespace }}"
+      type: Opaque
+      stringData:
+        api-token: "{{ kubernetes.cert_manager.cloudflare_api_token }}"
+
+- name: Create Let's Encrypt staging ClusterIssuer
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-staging
+        labels:
+          infra.haondt.dev/managed-by: ansible
+      spec:
+        acme:
+          # Let's Encrypt staging server (use for testing)
+          server: https://acme-staging-v02.api.letsencrypt.org/directory
+          email: "{{ kubernetes.cert_manager.acme_email }}"
+          privateKeySecretRef:
+            name: letsencrypt-staging
+          solvers:
+          - dns01:
+              cloudflare:
+                email: "{{ kubernetes.cert_manager.cloudflare_email }}"
+                apiTokenSecretRef:
+                  name: cloudflare-api-token
+                  key: api-token
+
+- name: Create Let's Encrypt production ClusterIssuer
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-prod
+        labels:
+          infra.haondt.dev/managed-by: ansible
+      spec:
+        acme:
+          # Let's Encrypt staging server (use for testing)
+          server: https://acme-v02.api.letsencrypt.org/directory
+          email: "{{ kubernetes.cert_manager.acme_email }}"
+          privateKeySecretRef:
+            name: letsencrypt-prod
+          solvers:
+          - dns01:
+              cloudflare:
+                email: "{{ kubernetes.cert_manager.cloudflare_email }}"
+                apiTokenSecretRef:
+                  name: cloudflare-api-token
+                  key: api-token
