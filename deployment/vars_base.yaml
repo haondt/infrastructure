@@ -28,7 +28,7 @@ terraform:
         marble:
           cluster_ip: *marble_cluster_ip
           service_accounts:
-            gitlab-deployments-runner:
+            gitlab-deployments-marble:
             roles:
               - deployer
 
