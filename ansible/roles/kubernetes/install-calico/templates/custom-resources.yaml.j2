@@ -48,3 +48,36 @@ metadata:
   name: default
   labels:
     infra.haondt.dev/managed-by: ansible
+
+---
+
+# allow cert-manager webhooks
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: allow-cert-manager-webhook
+spec:
+  selector: projectcalico.org/namespace == 'cert-manager'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        nets: 
+{% for host in groups[target_hosts] %}
+          - {{ hostvars[host].ansible_host }}/32
+{% endfor %}
+      destination:
+        ports: [10250]
+---
+
+# Default deny policy
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  selector: projectcalico.org/namespace not in {'kube-system', 'calico-system', 'calico-apiserver'}
+  types:
+    - Ingress
