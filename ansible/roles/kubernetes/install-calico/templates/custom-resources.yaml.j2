@@ -9,6 +9,9 @@ metadata:
 spec:
   # Configures Calico networking.
   calicoNetwork:
+    nodeAddressAutodetectionV4:
+      firstFound: false
+      kubernetes: NodeInternalIP
     ipPools:
     - name: default-ipv4-ippool
       blockSize: {{ kubernetes.calico.blockSize }}
@@ -70,6 +73,7 @@ spec:
 {% endfor %}
       destination:
         ports: [10250]
+
 ---
 
 # Default deny policy

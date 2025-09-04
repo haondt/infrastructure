@@ -15,9 +15,16 @@ patches:
     namespace: ingress-nginx
   patch: |-
 {% if kubernetes.ingress_nginx.load_balancer_ip is defined %}
+{% if kubernetes.kube_vip_cloud_controller.enabled %}
     - op: add
-      path: /spec/loadBalancerIP
+      path: /metadata/annotations/kube-vip.io~1loadbalancerIPs
       value: {{ kubernetes.ingress_nginx.load_balancer_ip }}
+{% endif %}
+{% if kubernetes.metallb.enabled %}
+    - op: add
+      path: /metadata/annotations/metallb.io~1loadBalancerIPs
+      value: {{ kubernetes.ingress_nginx.load_balancer_ip }}
+{% endif %}
 {% endif %}
 {% if kubernetes.ingress_nginx.node_port is defined and kubernetes.ingress_nginx.node_port.enabled %}
     - op: replace

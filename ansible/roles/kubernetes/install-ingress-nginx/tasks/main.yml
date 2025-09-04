@@ -56,3 +56,18 @@
       {% endfor %}
   when: kubernetes.ingress_nginx.node_port.enabled
 
+
+- block:
+  - name: Template ingress-nginx Calico custom resources
+    template:
+      src: calico-resources.yaml.j2
+      dest: "{{ haondt.artifacts }}/ingress-nginx-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+
+  - name: Apply ingress-nginx Calico custom resources
+    k8s:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+      state: present
+      src: "{{ haondt.artifacts }}/ingress-nginx-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+  when: kubernetes.calico.enabled

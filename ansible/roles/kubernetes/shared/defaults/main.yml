@@ -5,6 +5,8 @@ shared_role_defaults:
   default_namespace: ansible-managed
   calico:
     enabled: false
+  metallb:
+    enabled: false
   ingress_nginx:
     enabled: false
     node_port:

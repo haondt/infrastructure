@@ -1,0 +1,66 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Template metallb kustomization
+  template:
+    src: kustomization.yaml.j2
+    dest: "{{ haondt.artifacts }}/kustomization.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Build metallb manifests with kustomize
+  shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone
+  register: metallb_manifests
+  delegate_to: 127.0.0.1
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+- name: Apply metallb manifests
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    definition: "{{ metallb_manifests.stdout | from_yaml_all }}"
+  delegate_to: 127.0.0.1
+
+- name: Wait for metallb Operator to be ready
+  k8s_info:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    api_version: apps/v1
+    kind: Deployment
+    name: controller
+    namespace: metallb-system
+    wait: true
+    wait_condition:
+      type: Available
+      status: "True"
+    wait_timeout: 300
+
+
+- when: kubernetes.calico.enabled
+  block:
+  - name: Template metallb Calico custom resources
+    template:
+      src: calico-resources.yaml.j2
+      dest: "{{ haondt.artifacts }}/metallb-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+
+  - name: Apply metallb Calico custom resources
+    k8s:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+      state: present
+      src: "{{ haondt.artifacts }}/metallb-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+
+- name: Template metallb custom resources
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/metallb-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Apply metallb custom resources
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    src: "{{ haondt.artifacts }}/metallb-custom-resources.yaml"
+  delegate_to: 127.0.0.1

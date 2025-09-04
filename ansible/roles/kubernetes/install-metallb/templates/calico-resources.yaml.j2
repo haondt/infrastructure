@@ -1,0 +1,19 @@
+# allow metallb webhook
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: allow-metallb-webhook
+spec:
+  selector: projectcalico.org/namespace == 'metallb-system'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        nets: 
+{% for host in groups[target_hosts] %}
+          - {{ hostvars[host].ansible_host }}/32
+{% endfor %}
+      destination:
+        ports: [9443]

@@ -1,0 +1,5 @@
+---
+role_defaults:
+  metallb:
+    version: v0.15.2
+    ip_address_pool: {}

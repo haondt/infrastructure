@@ -3,6 +3,7 @@ x-shared:
     cluster_ip: &marble_cluster_ip 192.168.1.100
     ingress_ip: &marble_ingress_ip 192.168.1.101
     load_balancer_ip_range: &load_balancer_ip_range 192.168.1.101-192.168.1.110
+    pod_cidr: &marble_pod_cidr 10.42.0.0/16
 
 terraform:
   default:
@@ -57,15 +58,17 @@ ansible:
             k3s_node_name: "{{ inventory_hostname }}"
             k3s_node_ip: "{{ ansible_host }}"
             k3s_cluster_ip:  *marble_cluster_ip
+            k3s_pod_cidr: *marble_pod_cidr
             k3s_cluster_control_plane_ip: "{{ k3s_cluster_ip }}"
             k3s_server_config_yaml: |
-              node-ip: {{ ansible_host }}
-              disable: traefik,servicelb
+              node-ip: "{{ ansible_host }}"
+              disable: servicelb,traefik
               flannel-backend: none
               disable-network-policy: true
               disable-cloud-controller: true
+              cluster-cidr: "{{ k3s_pod_cidr }}"
               tls-san:
-                - {{ k3s_cluster_control_plane_ip }}
+                - "{{ k3s_cluster_control_plane_ip }}"
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
               kubeconfig: "~/.kube/config"
@@ -73,8 +76,14 @@ ansible:
               cluster_ip: *marble_cluster_ip
               calico:
                 enabled: true
-              kube_vip_cloud_controller:
+                pod_cidr: *marble_pod_cidr
+              metallb:
                 enabled: true
+                ip_address_pool:
+                  global:
+                    - *load_balancer_ip_range
+              kube_vip_cloud_controller:
+                enabled: false
                 ip_address_ranges:
                   global:
                     range: *load_balancer_ip_range

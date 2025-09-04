@@ -1,0 +1,42 @@
+# allow ingress-nginx admission webhook
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: allow-ingress-nginx-manager-webhook
+  labels:
+    infra.haondt.dev/managed-by: ansible
+spec:
+  selector: projectcalico.org/namespace == 'ingress-nginx'
+  types:
+    - Ingress
+  ingress:
+    - action: Allow
+      protocol: TCP
+      source:
+        nets: 
+{% for host in groups[target_hosts] %}
+          - {{ hostvars[host].ansible_host }}/32
+{% endfor %}
+      destination:
+        ports: [8443]
+---
+apiVersion: projectcalico.org/v3
+kind: GlobalNetworkPolicy
+metadata:
+  name: allow-ingress-nginx-controller
+  labels:
+    infra.haondt.dev/managed-by: ansible
+spec:
+  types:
+  - Ingress
+  ingress:
+  - action: Allow
+    protocol: TCP
+    destination:
+      ports:
+        - 80
+        - 443
+    source:
+      nets: [0.0.0.0/0]
+  selector: projectcalico.org/namespace == 'ingress-nginx'
+
