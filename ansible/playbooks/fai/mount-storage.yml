@@ -1,0 +1,48 @@
+- name: Resolve disk path
+  command: readlink -f "{{ disk.by_path }}"
+  register: resolved_disk
+  changed_when: false
+
+- name: Ensure parted is installed
+  package:
+    name: parted
+    state: present
+
+- name: Ensure partition exists
+  parted:
+    device: "{{ resolved_disk.stdout }}"
+    number: 1
+    state: present
+    align: optimal
+    part_type: primary
+
+- name: Format partition
+  filesystem:
+    fstype: ext4
+    dev: "{{ resolved_disk.stdout }}1"
+
+- name: Get partition UUID
+  command: blkid -s UUID -o value "{{ resolved_disk.stdout }}1"
+  register: partition_uuid
+  changed_when: false
+
+- name: Ensure mount point exists
+  file:
+    path: "{{ disk.mount }}"
+    state: directory
+
+- name: Mount partition by UUID
+  mount:
+    path: "{{ disk.mount }}"
+    src: "UUID={{ partition_uuid.stdout }}"
+    fstype: ext4
+    state: mounted
+
+- name: Ensure storage folder exists
+  file:
+    path: "{{ disk.mount }}/{{ ansible_user }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: haondt
+    mode: '0775'
+  loop: "{{ storage }}"

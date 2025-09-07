@@ -83,7 +83,7 @@ a-ping: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 
 a-fai-setup: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 	ansible-playbook -i $(ANSIBLE_INVENTORY) --extra-vars "@$(GENERATED_ANSIBLE_VARS)" \
-		$(ANSIBLE_DIRECTORY)/playbooks/fai-post-setup.yml \
+		$(ANSIBLE_DIRECTORY)/playbooks/fai/post-setup.yml \
 		-e target_hosts=$(TARGET) \
 		--ask-become-pass
 

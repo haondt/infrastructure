@@ -48,7 +48,6 @@
       command: timedatectl set-ntp true
       changed_when: false
 
-
     - name: Set hostname to inventory name
       hostname:
         name: "{{ inventory_hostname }}"
@@ -78,7 +77,6 @@
         line: '%wheel ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
 
-
     - name: Add ansible_user to wheel and haondt groups
       user:
         name: "{{ ansible_user }}"
@@ -101,3 +99,9 @@
         post_reboot_delay: 30
       when: reboot_required_file.stat.exists
 
+    - name: Ensure storage disks are partitioned and mounted
+      include_tasks: mount-storage.yml
+      loop: "{{ storage | default([]) }}"
+      loop_control:
+        loop_var: disk
+      when: storage is defined
