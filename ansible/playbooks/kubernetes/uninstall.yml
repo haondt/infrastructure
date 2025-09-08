@@ -1,0 +1,13 @@
+---
+- name: Uninstall components
+  hosts: "{{ target_hosts }}"
+  run_once: true
+  vars:
+    components_list: "{{ components | default('') | split(',') }}"
+  tasks:
+    - name: Uninstall component
+      include_role:
+        name: "kubernetes/uninstall-{{ loop_component }}"
+      loop: "{{ components_list }}"
+      loop_control:
+        loop_var: loop_component

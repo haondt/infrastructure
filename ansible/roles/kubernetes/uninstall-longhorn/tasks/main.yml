@@ -1,0 +1,35 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Enable Longhorn uninstall confirmation
+  k8s:
+    state: present
+    definition:
+      apiVersion: longhorn.io/v1beta2
+      kind: Setting
+      metadata:
+        name: deleting-confirmation-flag
+        namespace: longhorn-system
+      value: "true"
+
+- name: Create Longhorn uninstall job
+  k8s:
+    state: present
+    src: https://raw.githubusercontent.com/longhorn/longhorn/{{ kubernetes.longhorn.version }}/uninstall/uninstall.yaml
+
+- name: Wait for Longhorn uninstall job to complete
+  become: true
+  command: kubectl wait --for=condition=complete job/longhorn-uninstall -n longhorn-system --timeout=600s
+
+- name: Remove Longhorn deployment
+  k8s:
+    state: absent
+    src: https://raw.githubusercontent.com/longhorn/longhorn/{{ kubernetes.longhorn.version }}/deploy/longhorn.yaml
+
+- name: Remove Longhorn uninstall job
+  k8s:
+    state: absent
+    src: https://raw.githubusercontent.com/longhorn/longhorn/{{ kubernetes.longhorn.version }}/uninstall/uninstall.yaml
+

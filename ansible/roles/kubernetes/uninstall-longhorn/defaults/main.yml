@@ -1,0 +1,4 @@
+---
+role_defaults:
+  longhorn:
+    version: v1.9.1

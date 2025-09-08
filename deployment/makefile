@@ -95,6 +95,7 @@ a-k3s-install: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
 	    -e target_hosts=$(TARGET)
 
+
 a-k3s-reboot: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)
 	@$(MAKE) $(GENERATED_GROUP_VARS) TARGET=$(TARGET)
@@ -134,3 +135,13 @@ a-k8s-reset: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 		--extra-vars "@../deployment/$(GENERATED_ANSIBLE_VARS)" \
 		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
 	    -e target_hosts=$(TARGET)
+
+a-k8s-uninstall: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
+	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)
+	@$(MAKE) $(GENERATED_GROUP_VARS) TARGET=$(TARGET)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/kubernetes/uninstall.yml \
+		--extra-vars "@../deployment/$(GENERATED_ANSIBLE_VARS)" \
+		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
+	    -e target_hosts=$(TARGET) \
+		-e components=$(COMPONENTS)
+

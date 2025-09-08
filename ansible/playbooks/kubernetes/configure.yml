@@ -18,6 +18,17 @@
       when: kubernetes.metallb.enabled
     - role: kubernetes/install-cert-manager
       when: kubernetes.cert_manager.enabled
+
+- name: Configure kubernetes cluster (per-host)
+  hosts: "{{ target_hosts }}"
+  roles:
+    - role: kubernetes/install-longhorn
+      when: kubernetes.longhorn.enabled
+
+- name: Configure remaining items
+  hosts: "{{ target_hosts }}"
+  run_once: true
+  roles:
     - role: kubernetes/configure-namespaces
     - role: kubernetes/configure-service-accounts
     - role: kubernetes/configure-cluster-role-bindings

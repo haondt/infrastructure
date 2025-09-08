@@ -105,6 +105,11 @@ ansible:
                   https: 30443
               cert_manager:
                 enabled: true
+              longhorn:
+                enabled: true
+                default_data_path: /mnt/okra/longhorn
+                storage_classes:
+                  longhorn-default: {}
               service_accounts:
                 gitlab-deployments-marble:
                   roles:

@@ -1,0 +1,128 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install requirements
+  become: true
+  package:
+    name: 
+      - open-iscsi
+      - nfs-common
+      - cryptsetup
+      - dmsetup
+    state: present
+    update_cache: yes
+
+- name: Ensure iscsid service is started and enabled
+  become: true
+  service:
+    name: iscsid
+    state: started
+    enabled: yes
+
+- name: Load dm_crypt module
+  become: true
+  modprobe:
+    name: dm_crypt
+    state: present
+
+- name: Get coredns deployment info
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    namespace: kube-system
+    name: coredns
+  register: coredns_info
+  run_once: true
+
+- name: Ensure coredns has at least 2 replicas
+  become: true
+  command: >
+    kubectl -n kube-system scale deployment coredns
+    --replicas=2
+  run_once: true
+  when: coredns_info.resources[0].spec.replicas | int < 2
+
+- name: preflight checks
+  run_once: true
+  block:
+    - name: Download longhornctl binary
+      get_url:
+        url: "https://github.com/longhorn/cli/releases/download/{{ kubernetes.longhorn.version }}/longhornctl-linux-{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }}"
+        dest: /tmp/longhornctl
+        mode: '0755'
+
+    - name: Run longhornctl preflight check
+      command: /tmp/longhornctl check --kube-config {{ kubernetes.kubeconfig }} preflight
+      register: preflight_check
+      changed_when: false
+      failed_when: false
+
+    - name: Verify preflight check was successful
+      debug:
+        msg: "{{ preflight_check.stderr_lines | join('\n') | replace('\\n', '\n') | split('\n') }}"
+      failed_when: preflight_check.stderr_lines | join('\n') | split('\n') | select('search', 'error:') | length > 0
+
+- name: Clean up longhornctl binary
+  file:
+    path: /tmp/longhornctl
+    state: absent
+
+- name: Template Longhorn kustomization
+  template:
+    src: kustomization.yaml.j2
+    dest: "{{ haondt.artifacts }}/kustomization.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Build Longhorn manifests with kustomize
+  shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone
+  register: longhorn_manifests
+  delegate_to: 127.0.0.1
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+- name: Apply Longhorn manifests
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    definition: "{{ longhorn_manifests.stdout | from_yaml_all }}"
+  delegate_to: 127.0.0.1
+
+- when: kubernetes.calico.enabled
+  block:
+  - name: Template longhorn Calico custom resources
+    template:
+      src: calico-resources.yaml.j2
+      dest: "{{ haondt.artifacts }}/longhorn-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+
+  - name: Apply longhorn Calico custom resources
+    k8s:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+      state: present
+      src: "{{ haondt.artifacts }}/longhorn-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+
+- name: Wait for Longhorn manager DaemonSet to be ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: DaemonSet
+    name: longhorn-manager
+    namespace: longhorn-system
+  register: ds_info
+  until: ds_info.resources[0].status.numberReady == ds_info.resources[0].status.desiredNumberScheduled
+  retries: 60
+  delay: 10
+
+- name: Template longhorn custom resources
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/longhorn-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Apply longhorn custom resources
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    src: "{{ haondt.artifacts }}/longhorn-custom-resources.yaml"
+  delegate_to: 127.0.0.1

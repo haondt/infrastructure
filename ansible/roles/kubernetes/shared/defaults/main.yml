@@ -16,4 +16,6 @@ shared_role_defaults:
     enable_ssl_passthrough: false
   kube_vip_cloud_controller:
     enabled: false
+  longhorn:
+    enabled: false
 role_defaults:
