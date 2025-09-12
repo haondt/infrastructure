@@ -5,11 +5,14 @@ TARGET ?= default
 
 BASE_VARS_FILE := ./vars_base.yaml
 SENSITIVE_VARS_FILE := ./vars_sensitive.yaml
+RENDERED_BASE_VARS := build/rendered_base_vars.yaml
 COMBINED_VARS := build/vars.yaml
 GENERATED_TFVARS_JSON := build/terraform.tfvars.json
 GENERATED_GROUP_TFVARS_JSON = build/$(TARGET).terraform.tfvars.json
 SSH_PRIVATE_KEY := build/id_rsa
 TF_DIRECTORY := ../terraform
+SCRIPTS_DIRECTORY := ../scripts
+JINJA_RENDER := $(SCRIPTS_DIRECTORY)/jinja_render.py
 
 ANSIBLE_DIRECTORY := ../ansible
 ANSIBLE_INVENTORY := build/ansible.inventory.yml
@@ -19,9 +22,13 @@ GENERATED_GROUP_VARS = build/$(TARGET).ansible.vars.yaml
 
 all: tf-plan
 
-$(COMBINED_VARS): $(BASE_VARS_FILE) $(SENSITIVE_VARS_FILE)
+$(RENDERED_BASE_VARS): $(BASE_VARS_FILE) $(SENSITIVE_VARS_FILE)
+	@echo "Rendering $(RENDERED_BASE_VARS)"
+	@python3 $(JINJA_RENDER) -v $(SENSITIVE_VARS_FILE) -t $(BASE_VARS_FILE) -d $(RENDERED_BASE_VARS)
+
+$(COMBINED_VARS): $(RENDERED_BASE_VARS) $(SENSITIVE_VARS_FILE)
 	@echo "Generating $(COMBINED_VARS)"
-	@yq eval-all '. as $$item ireduce ({}; . * $$item) | explode(.)' $(BASE_VARS_FILE) $(SENSITIVE_VARS_FILE) > $@
+	@yq eval-all '. as $$item ireduce ({}; . * $$item) | explode(.)' $(RENDERED_BASE_VARS) $(SENSITIVE_VARS_FILE) > $@
 
 $(GENERATED_TFVARS_JSON): $(COMBINED_VARS)
 	@echo "Generating $(GENERATED_TFVARS_JSON)"
