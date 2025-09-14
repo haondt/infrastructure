@@ -19,6 +19,7 @@
 - name: Apply ingress-nginx manifests
   k8s:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: present
     definition: "{{ ingress_nginx_manifests.stdout | from_yaml_all }}"
   delegate_to: 127.0.0.1
@@ -26,6 +27,7 @@
 - name: Wait for ingress-nginx controller to be ready
   k8s_info:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     api_version: apps/v1
     kind: Deployment
     name: ingress-nginx-controller
@@ -40,6 +42,7 @@
 - name: Get ingress-nginx service ports
   k8s_info:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     api_version: v1
     kind: Service
     name: ingress-nginx-controller
@@ -67,6 +70,7 @@
   - name: Apply ingress-nginx Calico custom resources
     k8s:
       kubeconfig: "{{ kubernetes.kubeconfig }}"
+      context: "{{ kubernetes.context }}"
       state: present
       src: "{{ haondt.artifacts }}/ingress-nginx-calico-resources.yaml"
     delegate_to: 127.0.0.1

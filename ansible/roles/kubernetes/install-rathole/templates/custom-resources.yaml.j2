@@ -1,0 +1,81 @@
+{% for server_name, server_spec in kubernetes.rathole.servers.items() %}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rathole-secrets
+  namespace: rathole
+  labels:
+    infra.haondt.dev/managed-by: ansible
+type: Opaque
+stringData:
+{% for service_name, service_spec in server_spec.services.items() %}
+  {{ server_name }}-{{ service_name }}-token: "{{ service_spec.token }}"
+{% endfor %}
+---
+apiVersion: rathole.haondt.dev/v1
+kind: RatholeClient
+metadata:
+  name: {{ server_name }}
+  labels:
+    infra.haondt.dev/managed-by: ansible
+spec:
+  remoteAddr: "{{ server_spec.remote_addr }}"
+  transport:
+    type: noise
+    noise:
+      remotePublicKey: "{{ server_spec.transport.noise.remote_public_key }}"
+  services:
+{% for service_name, service_spec in server_spec.services.items() %}
+    {{ service_name }}:
+      tokenSecretRef:
+        name: rathole-secrets
+        key: {{ server_name }}-{{ service_name }}-token
+{% endfor %}
+{% endfor %}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-metacontroller-to-rathole-controller
+  namespace: rathole
+  labels:
+    infra.haondt.dev/managed-by: ansible
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rathole-controller
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: metacontroller
+    ports:
+    - protocol: TCP
+      port: 8080
+---          
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-rathole-client-to-nginx
+  namespace: rathole
+  labels:
+    infra.haondt.dev/managed-by: ansible
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rathole-nginx
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+{% for server_name in kubernetes.rathole.servers.keys() %}
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: rathole-client-{{ server_name }}
+{% endfor %}
+    ports:
+    - protocol: TCP
+      port: 8080

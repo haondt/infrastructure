@@ -18,4 +18,6 @@ shared_role_defaults:
     enabled: false
   longhorn:
     enabled: false
+  rathole:
+    enabled: false
 role_defaults:

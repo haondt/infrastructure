@@ -1,3 +1,6 @@
+VARIABLES:
+  chert_ip: chert-ip-adress
+
 ssh:
   private_key: |
     -----BEGIN OPENSSH PRIVATE KEY-----
@@ -5,20 +8,23 @@ ssh:
     -----END OPENSSH PRIVATE KEY-----
 
 terraform:
-  backend_config:
-    username: haond
-    password: your-gitlab-pat
-  tfvars:
-    cloudflare:
-      api_token: &cf_api_token your-cf-api-token (needs dns zone edit)
-      domains:
-        aeeo.com:
-          zone_id: your-cf-zone-id
-          records:
-            - name: aeeo.com
-              type: A
-              proxied: true
-              content: your-server-ip
+  default:
+    backend_config:
+      username: haond
+      password: your-gitlab-pat
+    tfvars:
+      cloudflare:
+        api_token: &cf_api_token your-cf-api-token (needs dns zone edit)
+        domains:
+          aeeo.com:
+            zone_id: your-cf-zone-id
+            records:
+              - name: aeeo.com
+                type: A
+                proxied: true
+                content: your-server-ip
+          haondt.dev:
+            zone_id: your-zone-id
 
 ansible:
   inventory:
@@ -32,3 +38,13 @@ ansible:
                 acme_email: &acme_email email@domain.com
                 cloudflare_email: *acme_email
                 cloudflare_api_token: *cf_api_token
+              rathole:
+                servers:
+                  chert:
+                    remote_addr: your-rathole-server-address:1234
+                    transport:
+                      noise:
+                        remote_public_key: your-remote-public-key
+                    services:
+                      haondt:
+                        token: your-token

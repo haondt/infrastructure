@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - https://gitlab.com/haondt/CICD/k8s-manifests/-/raw/{{ kubernetes.rathole.version }}/rathole-operator/bundle.yaml
+
+commonLabels:
+  infra.haondt.dev/managed-by: ansible
+
+{% if kubernetes.rathole.controller_image is defined %}
+patches:
+  - target:
+      kind: Deployment
+      name: rathole-controller
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: {{ kubernetes.rathole.controller_image }}
+{% endif %}

@@ -38,7 +38,7 @@
 - name: Ensure coredns has at least 2 replicas
   become: true
   command: >
-    kubectl -n kube-system scale deployment coredns
+    kubectl --context {{ kubernetes.context }} -n kube-system scale deployment coredns
     --replicas=2
   run_once: true
   when: coredns_info.resources[0].spec.replicas | int < 2
@@ -84,6 +84,7 @@
 - name: Apply Longhorn manifests
   k8s:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: present
     definition: "{{ longhorn_manifests.stdout | from_yaml_all }}"
   delegate_to: 127.0.0.1
@@ -99,6 +100,7 @@
   - name: Apply longhorn Calico custom resources
     k8s:
       kubeconfig: "{{ kubernetes.kubeconfig }}"
+      context: "{{ kubernetes.context }}"
       state: present
       src: "{{ haondt.artifacts }}/longhorn-calico-resources.yaml"
     delegate_to: 127.0.0.1
@@ -123,6 +125,7 @@
 - name: Apply longhorn custom resources
   k8s:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: present
     src: "{{ haondt.artifacts }}/longhorn-custom-resources.yaml"
   delegate_to: 127.0.0.1

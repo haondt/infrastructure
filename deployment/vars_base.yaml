@@ -17,6 +17,16 @@ terraform:
     tfvars:
       cloudflare:
         domains:
+          haondt.dev:
+            records:
+              - name: glance
+                type: A
+                proxied: true
+                content: {{ VARIABLES.chert_ip }}
+              - name: status
+                type: A
+                proxied: true
+                content: {{ VARIABLES.chert_ip }}
 
   clusters:
     backend_config:
@@ -110,6 +120,15 @@ ansible:
                 default_data_path: /mnt/okra/longhorn
                 storage_classes:
                   longhorn-default: {}
+              rathole:
+                enabled: true
+                version: rathole-operator/v0.0.2
+                # controller_image: registry.gitlab.com/haondt/cicd/registry/rathole-controller:main-fd66fa45
+                servers:
+                  chert:
+                    remote_addr: rathole.haondt.dev:7035
+                    services:
+                      haondt: {}
               service_accounts:
                 gitlab-deployments-marble:
                   roles:

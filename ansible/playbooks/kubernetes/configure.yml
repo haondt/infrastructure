@@ -18,6 +18,8 @@
       when: kubernetes.metallb.enabled
     - role: kubernetes/install-cert-manager
       when: kubernetes.cert_manager.enabled
+    - role: kubernetes/install-rathole
+      when: kubernetes.rathole.enabled
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"

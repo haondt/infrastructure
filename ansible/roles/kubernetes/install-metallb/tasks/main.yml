@@ -20,6 +20,7 @@
   k8s:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
     state: present
+    context: "{{ kubernetes.context }}"
     definition: "{{ metallb_manifests.stdout | from_yaml_all }}"
   delegate_to: 127.0.0.1
 
@@ -48,6 +49,7 @@
   - name: Apply metallb Calico custom resources
     k8s:
       kubeconfig: "{{ kubernetes.kubeconfig }}"
+      context: "{{ kubernetes.context }}"
       state: present
       src: "{{ haondt.artifacts }}/metallb-calico-resources.yaml"
     delegate_to: 127.0.0.1
@@ -61,6 +63,7 @@
 - name: Apply metallb custom resources
   k8s:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: present
     src: "{{ haondt.artifacts }}/metallb-custom-resources.yaml"
   delegate_to: 127.0.0.1

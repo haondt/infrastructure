@@ -21,7 +21,7 @@
 
 - name: Wait for Longhorn uninstall job to complete
   become: true
-  command: kubectl wait --for=condition=complete job/longhorn-uninstall -n longhorn-system --timeout=600s
+  command: kubectl --context {{ kubernetes.context }} wait --for=condition=complete job/longhorn-uninstall -n longhorn-system --timeout=600s
 
 - name: Remove Longhorn deployment
   k8s:

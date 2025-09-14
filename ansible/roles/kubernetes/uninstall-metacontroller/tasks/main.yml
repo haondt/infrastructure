@@ -1,0 +1,22 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Template metacontroller kustomization
+  template:
+    src: kustomization.yaml.j2
+    dest: "{{ haondt.artifacts }}/kustomization.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Build metacontroller manifests with kustomize
+  shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone > {{ haondt.artifacts }}/metacontroller-resources.yaml
+  delegate_to: 127.0.0.1
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+- name: Delete metacontroller resources
+  shell: kubectl --context {{ kubernetes.context }} delete -f {{ haondt.artifacts }}/metacontroller-resources.yaml
+  delegate_to: 127.0.0.1
+  ignore_errors: true
+

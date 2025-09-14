@@ -25,6 +25,7 @@
 - name: Apply kube-vip-cloud-controller manifests
   k8s:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: present
     definition: "{{ kube_vip_cloud_controller_manifests.stdout | from_yaml_all }}"
   delegate_to: 127.0.0.1
@@ -32,6 +33,7 @@
 - name: Wait for kube-vip-cloud-controller to be ready
   k8s_info:
     kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     api_version: apps/v1
     kind: Deployment
     name: kube-vip-cloud-provider

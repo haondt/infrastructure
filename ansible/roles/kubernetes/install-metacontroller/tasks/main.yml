@@ -1,0 +1,26 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Template metacontroller kustomization
+  template:
+    src: kustomization.yaml.j2
+    dest: "{{ haondt.artifacts }}/kustomization.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Build metacontroller manifests with kustomize
+  shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone
+  register: metacontroller_manifests
+  delegate_to: 127.0.0.1
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+- name: Apply metacontroller manifests
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    definition: "{{ metacontroller_manifests.stdout | from_yaml_all }}"
+  delegate_to: 127.0.0.1
+

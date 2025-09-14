@@ -1,0 +1,5 @@
+---
+role_defaults:
+  rathole:
+    version: v0.0.1
+    servers: {}
