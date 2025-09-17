@@ -52,23 +52,3 @@
               name: alloy-config
               key: config.alloy
   delegate_to: 127.0.0.1
-
-
-
-
-
-#
-# - name: Template rathole custom resources
-#   template:
-#     src: custom-resources.yaml.j2
-#     dest: "{{ haondt.artifacts }}/rathole-custom-resources.yaml"
-#   delegate_to: 127.0.0.1
-#
-# - name: Apply rathole custom resources
-#   k8s:
-#     kubeconfig: "{{ kubernetes.kubeconfig }}"
-#     context: "{{ kubernetes.context }}"
-#     state: present
-#     src: "{{ haondt.artifacts }}/rathole-custom-resources.yaml"
-#   delegate_to: 127.0.0.1
-#
