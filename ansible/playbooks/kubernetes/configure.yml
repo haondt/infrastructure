@@ -20,6 +20,8 @@
       when: kubernetes.cert_manager.enabled
     - role: kubernetes/install-rathole
       when: kubernetes.rathole.enabled
+    - role: kubernetes/install-alloy
+      when: kubernetes.alloy.enabled
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"

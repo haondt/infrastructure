@@ -1,0 +1,8 @@
+---
+role_defaults:
+  alloy:
+    config_controller:
+      enabled: false
+      version: alloy-config-controller/v0.0.1
+    version: v1.2.1
+    namespace: alloy

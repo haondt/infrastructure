@@ -20,4 +20,6 @@ shared_role_defaults:
     enabled: false
   rathole:
     enabled: false
+  alloy:
+    enabled: false
 role_defaults:

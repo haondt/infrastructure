@@ -129,6 +129,13 @@ ansible:
                     remote_addr: rathole.haondt.dev:7035
                     services:
                       haondt: {}
+              alloy:
+                enabled: true
+                config_controller:
+                  enabled: true
+                  # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-319a7250
+                  version: alloy-config-controller/v0.0.1
+                version: v1.2.1
               service_accounts:
                 gitlab-deployments-marble:
                   roles:

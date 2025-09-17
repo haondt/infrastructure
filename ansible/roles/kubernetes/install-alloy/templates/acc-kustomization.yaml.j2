@@ -1,0 +1,56 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - https://gitlab.com/haondt/CICD/k8s-manifests/-/raw/{{ kubernetes.alloy.config_controller.version }}/alloy-config-controller/bundle.yaml
+
+commonLabels:
+  infra.haondt.dev/managed-by: ansible
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: base-alloy-config
+    patch: |-
+      - op: replace
+        path: /data/config.alloy
+        value: |-
+          {{ lookup('file', 'config.alloy') | indent(10) }}
+
+{% if kubernetes.alloy.config_controller.controller_image is defined %}
+  - target:
+      kind: Deployment
+      name: alloy-config-controller
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: {{ kubernetes.alloy.config_controller.controller_image }}
+{% endif %}
+
+{% if kubernetes.alloy.namespace is defined %}
+  - target:
+      kind: Namespace
+      name: alloy
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: {{ kubernetes.alloy.namespace }}
+      - op: replace
+        path: /metadata/labels/app.kubernetes.io~1name
+        value: {{ kubernetes.alloy.namespace }}
+  - target:
+      namespace: alloy
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kubernetes.alloy.namespace }}
+  - target:
+      kind: Deployment
+      name: alloy-config-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value: 
+          - name: ACC_ALLOY_NAMESPACE
+            value: "{{ kubernetes.alloy.namespace }}"
+{% endif %}

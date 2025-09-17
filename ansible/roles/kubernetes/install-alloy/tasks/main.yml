@@ -1,0 +1,74 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install alloy-config-controller
+  when: kubernetes.alloy.config_controller.enabled
+  block:
+    - name: Template alloy config controller kustomization
+      template:
+        src: acc-kustomization.yaml.j2
+        dest: "{{ haondt.artifacts }}/kustomization.yaml"
+      delegate_to: 127.0.0.1
+
+    - name: Build acc with kustomize
+      shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone
+      register: acc_manifests
+      delegate_to: 127.0.0.1
+      vars:
+        ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+    - name: Apply acc manifests
+      k8s:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        state: present
+        definition: "{{ acc_manifests.stdout | from_yaml_all }}"
+        context: "{{ kubernetes.context }}"
+      delegate_to: 127.0.0.1
+
+- name: Install alloy via Helm
+  block:
+    - name: Add Grafana Helm repo
+      kubernetes.core.helm_repository:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: grafana
+        repo_url: https://grafana.github.io/helm-charts
+    - name: Install Alloy Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: alloy
+        chart_ref: grafana/alloy
+        release_namespace: "{{ kubernetes.alloy.namespace }}"
+        chart_version: "{{ kubernetes.alloy.version }}"
+        release_state: present
+        create_namespace: true
+        values:
+          alloy:
+            configMap:
+              create: false
+              name: alloy-config
+              key: config.alloy
+  delegate_to: 127.0.0.1
+
+
+
+
+
+#
+# - name: Template rathole custom resources
+#   template:
+#     src: custom-resources.yaml.j2
+#     dest: "{{ haondt.artifacts }}/rathole-custom-resources.yaml"
+#   delegate_to: 127.0.0.1
+#
+# - name: Apply rathole custom resources
+#   k8s:
+#     kubeconfig: "{{ kubernetes.kubeconfig }}"
+#     context: "{{ kubernetes.context }}"
+#     state: present
+#     src: "{{ haondt.artifacts }}/rathole-custom-resources.yaml"
+#   delegate_to: 127.0.0.1
+#
