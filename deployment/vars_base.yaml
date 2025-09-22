@@ -1,4 +1,4 @@
-x-shared:
+SHARED:
   marble:
     cluster_ip: &marble_cluster_ip 192.168.1.100
     ingress_ip: &marble_ingress_ip 192.168.1.101
@@ -136,6 +136,43 @@ ansible:
                   # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-319a7250
                   version: alloy-config-controller/v0.0.1
                 version: v1.2.1
+              charon:
+                enabled: true
+                version: charon-k8s-job/v0.0.1
+                repositories:
+                  default:
+                    config_map:
+                      repository: |-
+                        max_snapshots: 10
+                    secret:
+                      repository: |-
+                        password: "{{ VARIABLES.charon.repo_password }}"
+                  gcs-gabbro:
+                    config_map:
+                      repository: |-
+                        backend:
+                          type: gcs_bucket
+                          bucket: "{{ VARIABLES.charon.gcs.bucket }}"
+                          credentials: /config/gcs/credentials.json
+                    secret:
+                      credentials.json: |-
+                        {{ VARIABLES.charon.gcs.credentials | indent (24) }}
+                  hzsb:
+                    config_map:
+                      repository: |-
+                        backend:
+                          type: rclone
+                          rclone_config:
+                            type: ftp
+                            port: 21
+                            explicit_tls: "true"
+                    secret:
+                      repository: |-
+                        backend:
+                          rclone_config:
+                            host: "{{ VARIABLES.charon.hzsb.rclone.host }}"
+                            user: "{{ VARIABLES.charon.hzsb.rclone.user }}"
+                            pass: "{{ VARIABLES.charon.hzsb.rclone.pass }}"
               service_accounts:
                 gitlab-deployments-marble:
                   roles:

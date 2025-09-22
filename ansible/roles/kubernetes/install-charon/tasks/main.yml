@@ -1,0 +1,40 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Template charon kustomization
+  template:
+    src: kustomization.yaml.j2
+    dest: "{{ haondt.artifacts }}/kustomization.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Build charon manifests with kustomize
+  shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone
+  register: charon_manifests
+  delegate_to: 127.0.0.1
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+- name: Apply charon manifests
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    state: present
+    definition: "{{ charon_manifests.stdout | from_yaml_all }}"
+    context: "{{ kubernetes.context }}"
+  delegate_to: 127.0.0.1
+
+- name: Template charon custom resources
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/charon-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Apply charon custom resources
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    src: "{{ haondt.artifacts }}/charon-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+

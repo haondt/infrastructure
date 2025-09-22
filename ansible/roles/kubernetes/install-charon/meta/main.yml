@@ -1,0 +1,4 @@
+---
+dependencies:
+  - role: kubernetes/shared
+  - role: kubernetes/install-kubernetes-reflector

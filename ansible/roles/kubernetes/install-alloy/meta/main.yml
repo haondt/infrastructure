@@ -1,4 +1,3 @@
 ---
 dependencies:
   - role: kubernetes/shared
-  - role: kubernetes/install-metacontroller

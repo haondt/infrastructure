@@ -1,0 +1,5 @@
+---
+role_defaults:
+  kubernetes_reflector:
+    version: 9.1.31
+    namespace: kubernetes-reflector

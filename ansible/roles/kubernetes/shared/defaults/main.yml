@@ -22,4 +22,6 @@ shared_role_defaults:
     enabled: false
   alloy:
     enabled: false
+  charon:
+    enabled: false
 role_defaults:

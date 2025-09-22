@@ -1,0 +1,27 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install reflector via Helm
+  block:
+    - name: Add emberstack Helm repo
+      kubernetes.core.helm_repository:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: emberstack
+        repo_url: https://emberstack.github.io/helm-charts
+    - name: Install reflector Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: reflector
+        chart_ref: emberstack/reflector
+        chart_version: "{{ kubernetes.kubernetes_reflector.version }}"
+        release_namespace: "{{ kubernetes.kubernetes_reflector.namespace }}"
+        release_state: present
+        create_namespace: true
+        values:
+          namespaceOverride: "{{ kubernetes.kubernetes_reflector.namespace }}"
+  delegate_to: 127.0.0.1
+
