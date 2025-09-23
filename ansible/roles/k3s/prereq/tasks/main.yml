@@ -59,7 +59,7 @@
         state: link
 
 - name: Set up kube-vip on first node
-  when: inventory_hostname == groups[target_hosts][0] or ansible_host == groups[target_hosts][0]
+  when: groups[target_hosts] | length > 1 and (inventory_hostname == groups[target_hosts][0] or ansible_host == groups[target_hosts][0])
   block:
     - name: Create manifests directory
       ansible.builtin.file:

@@ -1,0 +1,65 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Template gitlab-runner custom resources
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/gitlab-runner-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Apply gitlab-runner custom resources
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    src: "{{ haondt.artifacts }}/gitlab-runner-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Install gitlab-runner via Helm
+  block:
+    - name: Add gitlab Helm repo
+      kubernetes.core.helm_repository:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: gitlab
+        repo_url: https://charts.gitlab.io
+    - name: Install gitlab-runner Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: gitlab-runner
+        chart_ref: gitlab/gitlab-runner
+        chart_version: "{{ kubernetes.gitlab_runner.version }}"
+        release_namespace: "{{ kubernetes.gitlab_runner.namespace }}"
+        release_state: present
+        create_namespace: false
+        values:
+          namespaceOverride: "{{ kubernetes.gitlab_runner.namespace }}"
+          gitlabUrl: "{{ kubernetes.gitlab_runner.gitlab_url }}"
+          rbac:
+            create: true
+          runnerToken: "{{ kubernetes.gitlab_runner.runner_token }}"
+          runners:
+            config: |
+              [[runners]]
+                request_concurrency = 4
+                [runners.kubernetes]
+                  image = "debian:13-slim"
+                  privileged = false
+
+                  [[runners.kubernetes.volumes.pvc]]
+                    name = "gitlab-runner-cache"
+                    mount_path = "/cache"
+                  [[runners.kubernetes.volumes.host_path]]
+                    name = "docker-sock"
+                    mount_path = "/var/run/docker.sock"
+                    read_only = true
+                    host_path = "/var/run/docker.sock"
+                    mount_propagation = "HostToContainer"
+                [runners.cache]
+                  MaxUploadedArchiveSize = 0
+          concurrent: 10
+  delegate_to: 127.0.0.1
+

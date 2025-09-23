@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ kubernetes.gitlab_runner.namespace }}
+  labels:
+    app.kubernetes.io/name: {{ kubernetes.gitlab_runner.namespace }}
+    infra.haondt.dev/managed-by: ansible
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitlab-runner-cache
+  namespace: {{ kubernetes.gitlab_runner.namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 32Gi

@@ -92,7 +92,7 @@ a-fai-setup: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 	ansible-playbook -i $(ANSIBLE_INVENTORY) --extra-vars "@$(GENERATED_ANSIBLE_VARS)" \
 		$(ANSIBLE_DIRECTORY)/playbooks/fai/post-setup.yml \
 		-e target_hosts=$(TARGET) \
-		--ask-become-pass
+		--ask-pass --ask-become-pass
 
 a-k3s-install: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)

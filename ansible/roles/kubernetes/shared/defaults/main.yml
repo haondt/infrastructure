@@ -24,4 +24,6 @@ shared_role_defaults:
     enabled: false
   charon:
     enabled: false
+  gitlab_runner:
+    enabled: false
 role_defaults:

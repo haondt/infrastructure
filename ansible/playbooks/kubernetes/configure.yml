@@ -24,6 +24,8 @@
       when: kubernetes.alloy.enabled
     - role: kubernetes/install-charon
       when: kubernetes.charon.enabled
+    - role: kubernetes/install-gitlab-runner
+      when: kubernetes.gitlab_runner.enabled
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"

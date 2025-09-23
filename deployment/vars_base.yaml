@@ -1,9 +1,15 @@
 SHARED:
+  default:
+    pod_cidr: &default_pod_cidr 10.42.0.0/16
   marble:
     cluster_ip: &marble_cluster_ip 192.168.1.100
     ingress_ip: &marble_ingress_ip 192.168.1.101
     load_balancer_ip_range: &load_balancer_ip_range 192.168.1.101-192.168.1.110
     pod_cidr: &marble_pod_cidr 10.42.0.0/16
+  basalt:
+    cluster_ip: &basalt_cluster_ip 192.168.1.139
+    load_balancer_ip_range: &basalt_lb_ip_range 192.168.1.201-192.168.1.205
+
 
 terraform:
   default:
@@ -43,11 +49,10 @@ terraform:
             roles:
               - deployer
 
-
-
 ssh:
   public_keys: &public_keys
     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINjSDZ49g0G2wpeTUe66hT5/bNlHt37Z+gEg7JZf/67f haondt@aurora
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCtq8bQGdUwr0YNSVXvZMfpJyl50tiiP61aVWxQsWOOi8QQBTV6GkZqcSIMIyiS3IKbP8sOkNmUFZsTjUibXlHW4OI2V9FF6b/oAxuKuAFYdx0HHFyWmuOkAvZBOjAEw782l9/tq8zgs5HXyqP1GizqenpcTk0LF8QavAUnwpzCdrBJF8ZE5Ih3elyceVw0PVxID9C/Dg6Ts/0IkN+rSpo3vagBRZIf0yFddW3nu7ONmEF93ZEAuSWK+nvN2PCuGq2q11dIu53VgDKwluF46uqeCAQNQfrIKYzyFeb+qRj9E5YO8ZdVWXmVM3+Qkw6o2DLReZgBBIe6i3i0Xdv3mCV5lMR1zNXd5u4VyPXvo1tl5lNvrFSrPxfvQVPKS8Ow9SRjb56lYMenTMaSJ7RhOOigeUvx6/WVltEGmgDRcyNQww9S55GQFx+rAq9VZSutm/hnV917C4jrgfAvSeE8hRxxLdX8YopOhioqaK1fsfD0HUtHpncxaQwNnFD3il2hkpRkBcpt7W44mjxb/A3/hf80XVafEVVuBVEc2E5DK2hrAJBWfWm+BjnywwLzxQmJJNG1E5OjwE2eOVqsZr/XyVCv6Zz/JnOOr27WxdVj+SKzIkm8ER0BuI1DQFxICCA8Lv9VsXmEjP8sHWIsYHHKdggEcqci0DOgYmzTtX9aZ7VCoQ== haondt@ansible
 
 ansible:
   inventory:
@@ -74,12 +79,13 @@ ansible:
             ansible_user: marble
             ansible_ssh_private_key_file: build/id_rsa
             k3s_version: v1.33.3+k3s1
-            k3s_node_name: "{{ inventory_hostname }}"
-            k3s_node_ip: "{{ ansible_host }}"
+            k3s_node_name: "{% raw %}{{ inventory_hostname }}{% endraw %}"
+            k3s_node_ip: "{% raw %}{{ ansible_host }}{% endraw %}"
             k3s_cluster_ip:  *marble_cluster_ip
             k3s_pod_cidr: *marble_pod_cidr
-            k3s_cluster_control_plane_ip: "{{ k3s_cluster_ip }}"
+            k3s_cluster_control_plane_ip: "{% raw %}{{ k3s_cluster_ip }}{% endraw %}"
             k3s_server_config_yaml: |
+              {% raw %}
               node-ip: "{{ ansible_host }}"
               disable: servicelb,traefik
               flannel-backend: none
@@ -88,6 +94,7 @@ ansible:
               cluster-cidr: "{{ k3s_pod_cidr }}"
               tls-san:
                 - "{{ k3s_cluster_control_plane_ip }}"
+              {% endraw %}
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
               kubeconfig: "~/.kube/config"
@@ -139,7 +146,7 @@ ansible:
               charon:
                 enabled: true
                 version: charon-k8s-job/v0.0.1
-                repositories:
+                repositories: &charon_repositories
                   default:
                     config_map:
                       repository: |-
@@ -177,6 +184,62 @@ ansible:
                 gitlab-deployments-marble:
                   roles:
                     - cluster-admin
+
+        basalt:
+          hosts:
+            basalt:
+              ansible_host: *basalt_cluster_ip
+          vars:
+            ansible_user: basalt
+            ansible_ssh_private_key_file: build/id_rsa
+            k3s_version: v1.33.3+k3s1
+            k3s_node_name: "{% raw %}{{ inventory_hostname }}{% endraw %}"
+            k3s_node_ip: "{% raw %}{{ ansible_host }}{% endraw %}"
+            k3s_cluster_ip: *basalt_cluster_ip
+            k3s_pod_cidr: *default_pod_cidr
+            k3s_cluster_control_plane_ip: "{% raw %}{{ k3s_cluster_ip }}{% endraw %}"
+            k3s_server_config_yaml: |
+              {% raw %}
+              node-ip: "{{ ansible_host }}"
+              disable: servicelb,traefik
+              cluster-cidr: "{{ k3s_pod_cidr }}"
+              tls-san:
+                - "{{ k3s_cluster_control_plane_ip }}"
+              {% endraw %}
+            k3s_extra_server_args: "--secrets-encryption"
+            kubernetes:
+              kubeconfig: "~/.kube/config"
+              context: "basalt"
+              cluster_ip: *basalt_cluster_ip
+              ingress_nginx:
+                load_balancer_ip: *basalt_cluster_ip
+                enabled: true
+                node_port:
+                  enabled: false
+                  http: 30080
+                  https: 30443
+              cert_manager:
+                enabled: true
+                acme_email: "{{ VARIABLES.cert_manager.acme_email }}"
+                cloudflare_email: "{{ VARIABLES.cert_manager.cloudflare_email }}"
+                cloudflare_api_token: "{{ VARIABLES.cert_manager.cloudflare_api_token }}"
+              metallb:
+                enabled: true
+                ip_address_pool:
+                  global:
+                    - *basalt_lb_ip_range
+              charon:
+                enabled: true
+                version: charon-k8s-job/v0.0.1
+                repositories: *charon_repositories
+              gitlab_runner:
+                enabled: true
+                runner_token: "{{ VARIABLES.gitlab_runner.runner_token }}"
+              service_accounts:
+                gitlab-deployments-basalt:
+                  roles:
+                    - cluster-admin
+
 
   vars:
     ssh:
