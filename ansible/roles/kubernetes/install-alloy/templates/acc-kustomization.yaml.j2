@@ -15,7 +15,7 @@ patches:
       - op: replace
         path: /data/config.alloy
         value: |-
-          {{ lookup('file', 'config.alloy') | indent(10) }}
+          {{ lookup('template', 'config.alloy.j2') | indent(10) }}
 
 {% if kubernetes.alloy.config_controller.controller_image is defined %}
   - target:

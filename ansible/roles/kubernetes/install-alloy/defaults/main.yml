@@ -6,3 +6,4 @@ role_defaults:
       version: alloy-config-controller/v0.0.1
     version: v1.2.1
     namespace: alloy
+    base_config: ''

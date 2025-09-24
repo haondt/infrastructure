@@ -73,3 +73,7 @@ Remove all Ansible-managed Kubernetes resources
 ```bash
 make a-k8s-reset TARGET=marble
 ```
+
+# TODO
+
+- need to either add the `daemon.json` changes documented here https://gitlab.com/haondt/CICD/runner and add installing docker to the basalt setup, or rework everything to use kaniko.

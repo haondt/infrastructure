@@ -98,7 +98,8 @@ ansible:
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
               kubeconfig: "~/.kube/config"
-              context: "marble"
+              cluster_name: marble
+              context: marble
               cluster_ip: *marble_cluster_ip
               calico:
                 enabled: true
@@ -143,6 +144,41 @@ ansible:
                   # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-319a7250
                   version: alloy-config-controller/v0.0.1
                 version: v1.2.1
+                base_config: |
+                  prometheus.remote_write "mimir" {
+                    endpoint {
+                      url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
+                    }
+                    external_labels = {
+                      dev_haondt_cluster = "marble",
+                    }
+                  }
+
+                  discovery.kubernetes "nodes" {
+                    role = "node"
+                    selectors {
+                      role = "node"
+                      field = "metadata.name=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                    }
+                  }
+
+                  prometheus.scrape "nodes" {
+                    targets = discovery.kubernetes.nodes.targets
+                    scheme = "https"
+    
+                    tls_config {
+                      insecure_skip_verify = true
+                    }
+                    
+                    authorization {
+                      credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    }
+                    
+                    job_name = "kubelet"
+                    metrics_path = "/metrics/resource"
+                    forward_to = [prometheus.remote_write.mimir.receiver]
+                  }
+
               charon:
                 enabled: true
                 version: charon-k8s-job/v0.0.1
@@ -209,7 +245,8 @@ ansible:
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
               kubeconfig: "~/.kube/config"
-              context: "basalt"
+              cluster_name: basalt
+              context: basalt
               cluster_ip: *basalt_cluster_ip
               ingress_nginx:
                 load_balancer_ip: *basalt_cluster_ip
