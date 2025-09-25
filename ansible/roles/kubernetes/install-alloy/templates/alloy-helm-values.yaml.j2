@@ -1,0 +1,39 @@
+{% if kubernetes.alloy.node_exporter.enabled %}
+controller:
+  volumes:
+    extra:
+      - name: proc
+        hostPath: 
+          path: /proc
+          type: Directory
+      - name: sys
+        hostPath: 
+          path: /sys
+          type: Directory
+{% for mount_name, mount in kubernetes.alloy.node_exporter.mounts.items() %}
+      - name: {{ mount_name }}
+        hostPath:
+          type: Directory
+          path: {{ mount }}
+{% endfor %}
+{% endif %}
+alloy:
+{% if kubernetes.alloy.node_exporter.enabled %}
+  securityContext:
+    privileged: true
+    runAsUser: 0
+  mounts:
+    extra:
+      - name: proc
+        mountPath: /proc
+      - name: sys
+        mountPath: /sys
+{% for mount_name, mount in kubernetes.alloy.node_exporter.mounts.items() %}
+      - name: {{ mount_name }}
+        mountPath: {{ mount }}
+{% endfor %}
+{% endif %}
+  configMap:
+    create: false
+    name: alloy-config
+    key: config.alloy

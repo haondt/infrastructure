@@ -4,6 +4,9 @@ role_defaults:
     config_controller:
       enabled: false
       version: alloy-config-controller/v0.0.1
+    node_exporter:
+      enabled: false
+      mounts: {}
     version: v1.2.1
     namespace: alloy
     base_config: ''

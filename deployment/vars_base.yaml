@@ -139,6 +139,10 @@ ansible:
                       haondt: {}
               alloy:
                 enabled: true
+                node_exporter:
+                  enabled: true
+                  mounts:
+                    okra: /mnt/okra
                 config_controller:
                   enabled: true
                   # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-319a7250
@@ -154,6 +158,8 @@ ansible:
                     }
                   }
 
+
+                  // k8s nodes
                   discovery.kubernetes "nodes" {
                     role = "node"
                     selectors {
@@ -178,6 +184,22 @@ ansible:
                     metrics_path = "/metrics/resource"
                     forward_to = [prometheus.remote_write.mimir.receiver]
                   }
+
+                  // node-exporter
+                  prometheus.exporter.unix "node_exporter" {
+                    set_collectors = [
+                      "cpu",
+                      "meminfo",
+                      "diskstats",
+                      "filesystem",
+                    ]
+                  }
+
+                  prometheus.scrape "node_exporter" {
+                    targets = prometheus.exporter.unix.node_exporter.targets
+                    forward_to = [prometheus.remote_write.mimir.receiver]
+                  }
+
 
               charon:
                 enabled: true

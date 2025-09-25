@@ -35,6 +35,11 @@
         context: "{{ kubernetes.context }}"
         name: grafana
         repo_url: https://grafana.github.io/helm-charts
+    - name: Template Alloy helm values
+      template:
+        src: alloy-helm-values.yaml.j2
+        dest: "{{ haondt.artifacts }}/alloy-helm-values.yaml"
+      delegate_to: 127.0.0.1
     - name: Install Alloy Helm chart
       kubernetes.core.helm:
         kubeconfig: "{{ kubernetes.kubeconfig }}"
@@ -45,10 +50,6 @@
         chart_version: "{{ kubernetes.alloy.version }}"
         release_state: present
         create_namespace: true
-        values:
-          alloy:
-            configMap:
-              create: false
-              name: alloy-config
-              key: config.alloy
+        values_files:
+          - "{{ haondt.artifacts }}/alloy-helm-values.yaml"
   delegate_to: 127.0.0.1
