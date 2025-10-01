@@ -94,6 +94,7 @@ ansible:
               cluster-cidr: "{{ k3s_pod_cidr }}"
               tls-san:
                 - "{{ k3s_cluster_control_plane_ip }}"
+              kubelet-arg: "allowed-unsafe-sysctls=net.ipv4.*,net.ipv6.*"
               {% endraw %}
             k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
