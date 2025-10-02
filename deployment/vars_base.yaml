@@ -9,6 +9,9 @@ SHARED:
   basalt:
     cluster_ip: &basalt_cluster_ip 192.168.1.139
     load_balancer_ip_range: &basalt_lb_ip_range 192.168.1.201-192.168.1.205
+  gabbro:
+    cluster_ip: &gabbro_cluster_ip 192.168.1.78
+    load_balancer_ip_range: &gabbro_lb_ip_range 192.168.1.211-192.168.1.215
 
 
 terraform:
@@ -241,6 +244,125 @@ ansible:
                             pass: "{{ VARIABLES.charon.hzsb.rclone.pass }}"
               service_accounts:
                 gitlab-deployments-marble:
+                  roles:
+                    - cluster-admin
+
+        gabbro_cluster:
+          hosts:
+            gabbro:
+              ansible_host: *gabbro_cluster_ip
+          vars:
+            ansible_user: gabbro
+            ansible_ssh_private_key_file: build/id_rsa
+            k3s_version: v1.33.3+k3s1
+            k3s_node_name: "{% raw %}{{ inventory_hostname }}{% endraw %}"
+            k3s_node_ip: "{% raw %}{{ ansible_host }}{% endraw %}"
+            k3s_cluster_ip: *gabbro_cluster_ip
+            k3s_pod_cidr: *default_pod_cidr
+            k3s_cluster_control_plane_ip: "{% raw %}{{ k3s_cluster_ip }}{% endraw %}"
+            k3s_server_config_yaml: |
+              {% raw %}
+              node-ip: "{{ ansible_host }}"
+              disable: servicelb,traefik
+              flannel-backend: none
+              disable-network-policy: true
+              cluster-cidr: "{{ k3s_pod_cidr }}"
+              tls-san:
+                - "{{ k3s_cluster_control_plane_ip }}"
+              kubelet-arg: "allowed-unsafe-sysctls=net.ipv4.*,net.ipv6.*"
+              {% endraw %}
+            k3s_extra_server_args: "--secrets-encryption"
+            kubernetes:
+              kubeconfig: "~/.kube/config"
+              context: gabbro_cluster
+              cluster_ip: *gabbro_cluster_ip
+              calico:
+                enabled: true
+                pod_cidr: *default_pod_cidr
+              metallb:
+                enabled: true
+                ip_address_pool:
+                  global:
+                    - *gabbro_lb_ip_range
+              ingress_nginx:
+                # load_balancer_ip: *gabbro_cluster_ip
+                enabled: true
+                node_port:
+                  enabled: true
+                  http: 30080
+                  https: 30443
+              cert_manager:
+                enabled: true
+                acme_email: "{{ VARIABLES.cert_manager.acme_email }}"
+                cloudflare_email: "{{ VARIABLES.cert_manager.cloudflare_email }}"
+                cloudflare_api_token: "{{ VARIABLES.cert_manager.cloudflare_api_token }}"
+              charon:
+                enabled: true
+                version: charon-k8s-job/v0.0.1
+                repositories: *charon_repositories
+              alloy:
+                enabled: true
+                node_exporter:
+                  enabled: true
+                  # mounts:
+                  #   okra: /mnt/okra
+                config_controller:
+                  enabled: true
+                  version: alloy-config-controller/v0.0.1
+                version: v1.2.1
+                base_config: |
+                  prometheus.remote_write "mimir" {
+                    endpoint {
+                      url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
+                    }
+                    external_labels = {
+                      dev_haondt_cluster = "gabbro",
+                    }
+                  }
+
+
+                  // k8s nodes
+                  discovery.kubernetes "nodes" {
+                    role = "node"
+                    selectors {
+                      role = "node"
+                      field = "metadata.name=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                    }
+                  }
+
+                  prometheus.scrape "nodes" {
+                    targets = discovery.kubernetes.nodes.targets
+                    scheme = "https"
+    
+                    tls_config {
+                      insecure_skip_verify = true
+                    }
+                    
+                    authorization {
+                      credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                    }
+                    
+                    job_name = "kubelet"
+                    metrics_path = "/metrics/resource"
+                    forward_to = [prometheus.remote_write.mimir.receiver]
+                  }
+
+                  // node-exporter
+                  prometheus.exporter.unix "node_exporter" {
+                    set_collectors = [
+                      "cpu",
+                      "meminfo",
+                      "diskstats",
+                      "filesystem",
+                    ]
+                  }
+
+                  prometheus.scrape "node_exporter" {
+                    targets = prometheus.exporter.unix.node_exporter.targets
+                    forward_to = [prometheus.remote_write.mimir.receiver]
+                  }
+              service_accounts:
+                gitlab-deployments-gabbro:
                   roles:
                     - cluster-admin
 
