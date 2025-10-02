@@ -105,3 +105,7 @@
       loop_control:
         loop_var: disk
       when: storage is defined
+
+    - name: Install nvidia drivers
+      include_tasks: nvidia.yml
+      when: nvidia is defined and nvidia.enabled

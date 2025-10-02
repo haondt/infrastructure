@@ -1,0 +1,4 @@
+---
+role_defaults:
+  toolkit_version: 1.17.8-1
+  device_plugin_chart_version: v0.17.1

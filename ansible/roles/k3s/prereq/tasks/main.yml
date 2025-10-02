@@ -13,6 +13,13 @@
     reload: true
   when: ansible_all_ipv6_addresses | length > 0
 
+- name: Increase inotify max user instances
+  ansible.posix.sysctl:
+    name: fs.inotify.max_user_instances
+    value: "4096"
+    state: present
+    reload: true
+
 - name: Populate service facts
   ansible.builtin.service_facts:
 

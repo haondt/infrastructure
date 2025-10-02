@@ -32,6 +32,8 @@
   roles:
     - role: kubernetes/install-longhorn
       when: kubernetes.longhorn.enabled
+    - role: kubernetes/install-nvidia-devices
+      when: nvidia is defined and nvidia.enabled
 
 - name: Configure remaining items
   hosts: "{{ target_hosts }}"

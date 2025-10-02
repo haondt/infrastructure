@@ -1,0 +1,88 @@
+- name: Ensure python3-debian is installed
+  package:
+    name: python3-debian
+    state: present
+
+- name: Set Debian suite fact
+  ansible.builtin.set_fact:
+    debian_suite: "{{ ansible_facts['lsb']['codename'] | default(ansible_facts['distribution_release']) }}"
+
+- name: include nonfree apt packages
+  ansible.builtin.deb822_repository:
+    name: debian
+    types: [deb, deb-src]
+    uris: http://deb.debian.org/debian/
+    suites: "{{ debian_suite }}"
+    components: [main, contrib, non-free, non-free-firmware]
+    signed_by: /usr/share/keyrings/debian-archive-keyring.gpg
+    state: present
+
+- name: Configure Debian security repository with non-free
+  ansible.builtin.deb822_repository:
+    name: debian-security
+    types: [deb, deb-src]
+    uris: http://security.debian.org/debian-security/
+    suites: "{{ debian_suite }}-security"
+    components: [main, contrib, non-free, non-free-firmware]
+    signed_by: /usr/share/keyrings/debian-archive-keyring.gpg
+    state: present
+
+- name: Configure Debian updates repository with non-free
+  ansible.builtin.deb822_repository:
+    name: debian-updates
+    types: [deb, deb-src]
+    uris: http://deb.debian.org/debian/
+    suites: "{{ debian_suite }}-updates"
+    components: [main, contrib, non-free, non-free-firmware]
+    signed_by: /usr/share/keyrings/debian-archive-keyring.gpg
+    state: present
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+  changed_when: false
+
+- name: Get running kernel version
+  ansible.builtin.command: dpkg --print-architecture
+  register: debian_arch
+  changed_when: false
+
+- name: Install kernel headers for DKMS
+  apt:
+    name: "linux-headers-{{ debian_arch.stdout }}"
+    state: present
+    update_cache: no
+
+- name: Install NVIDIA proprietary drivers
+  apt:
+    name:
+      - nvidia-kernel-dkms
+      - nvidia-driver
+      - firmware-misc-nonfree
+    state: present
+    update_cache: no
+  register: nvidia_install
+
+- name: Reboot to load new driver
+  reboot:
+    msg: "Reboot initiated by Ansible for nvidia driver updates"
+    connect_timeout: 5
+    reboot_timeout: 300
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+  when: nvidia_install.changed
+
+- name: Patch NVIDIA driver for multiple transcodes
+  when: nvidia_install.changed
+  block:
+    - name: Download patch
+      ansible.builtin.git:
+        repo: https://github.com/keylase/nvidia-patch.git
+        dest: /opt/nvidia-patch
+        update: no
+      register: patch_repo
+
+    - name: Run patch script
+      ansible.builtin.command: ./patch.sh
+      args:
+        chdir: /opt/nvidia-patch
