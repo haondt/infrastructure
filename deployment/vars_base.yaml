@@ -306,8 +306,10 @@ ansible:
                 enabled: true
                 node_exporter:
                   enabled: true
-                  # mounts:
-                  #   okra: /mnt/okra
+                  mounts:
+                    celery: /mnt/celery
+                    pepper: /mnt/pepper
+                    rhyolite: /mnt/rhyolite/gabbro
                 config_controller:
                   enabled: true
                   version: alloy-config-controller/v0.0.1
@@ -318,7 +320,7 @@ ansible:
                       url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
                     }
                     external_labels = {
-                      dev_haondt_cluster = "gabbro",
+                      dev_haondt_cluster = "gabbro_cluster",
                     }
                   }
 
@@ -363,6 +365,20 @@ ansible:
                     targets = prometheus.exporter.unix.node_exporter.targets
                     forward_to = [prometheus.remote_write.mimir.receiver]
                   }
+
+                  // dgcm-exporter
+                  discovery.kubernetes "dcgm_exporter" {
+                    role = "service"
+                    selectors {
+                      role = "service"
+                      field = "metadata.name=dcgm-exporter,metadata.namespace=dcgm-exporter"
+                    }
+                  }
+                  prometheus.scrape "dcgm_exporter" {
+                    targets = discovery.kubernetes.dcgm_exporter.targets
+                    forward_to = [prometheus.remote_write.mimir.receiver]
+                  }
+
               service_accounts:
                 gitlab-deployments-gabbro:
                   roles:

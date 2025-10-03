@@ -85,6 +85,41 @@
           runtimeClassName: nvidia
   delegate_to: 127.0.0.1
 
+- name: install dcgm-exporter
+  block:
+    - name: Add nvidia Helm repo
+      kubernetes.core.helm_repository:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: gpu-helm-charts
+        repo_url: https://nvidia.github.io/dcgm-exporter/helm-charts
+    - name: Install dcgm-exporter Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: dcgm-exporter
+        chart_ref: gpu-helm-charts/dcgm-exporter
+        release_namespace: "dcgm-exporter"
+        chart_version: "{{ nvidia.dcgm_exporter_chart_version }}"
+        release_state: present
+        create_namespace: true
+        values:
+          runtimeClassName: nvidia
+          serviceMonitor:
+            enabled: false
+    - name: Template dcgm-exporter alloy custom resources
+      template:
+        src: alloy-resources.yaml.j2
+        dest: "{{ haondt.artifacts }}/dcgm-exporter-alloy-resources.yaml"
+    - name: Apply dcgm-exporter alloy custom resources
+      k8s:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        state: present
+        src: "{{ haondt.artifacts }}/dcgm-exporter-alloy-resources.yaml"
+  when: kubernetes.alloy.enabled
+  delegate_to: 127.0.0.1
+
 - name: Add gpu.present label to node
   k8s:
     definition:

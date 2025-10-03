@@ -22,6 +22,7 @@ shared_role_defaults:
     enabled: false
   alloy:
     enabled: false
+    namespace: alloy
   charon:
     enabled: false
   gitlab_runner:

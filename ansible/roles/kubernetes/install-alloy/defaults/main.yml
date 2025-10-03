@@ -8,5 +8,4 @@ role_defaults:
       enabled: false
       mounts: {}
     version: v1.2.1
-    namespace: alloy
     base_config: ''
