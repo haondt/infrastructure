@@ -1,0 +1,51 @@
+---
+- name: Set component list
+  hosts: "{{ target_hosts }}"
+  tasks:
+    - name: set fact
+      ansible.builtin.set_fact:
+        components_list: "{{ components | default('') | split(',') }}"
+
+- name: Configure Kubernetes cluster
+  hosts: "{{ target_hosts }}"
+  run_once: true
+  roles:
+    - role: kubernetes/install-calico
+      when: "'calico' in  components_list and kubernetes.calico.enabled"
+    - role: kubernetes/install-kube-vip-cloud-controller
+      when: "'kube_vip_cloud_controller' in  components_list and kubernetes.kube_vip_cloud_controller.enabled"
+    - role: kubernetes/install-ingress-nginx
+      when: "'ingress_nginx' in  components_list and kubernetes.ingress_nginx.enabled"
+    - role: kubernetes/install-metallb
+      when: "'metallb' in  components_list and kubernetes.metallb.enabled"
+    - role: kubernetes/install-cert-manager
+      when: "'cert_manager' in  components_list and kubernetes.cert_manager.enabled"
+    - role: kubernetes/install-rathole
+      when: "'rathole' in  components_list and kubernetes.rathole.enabled"
+    - role: kubernetes/install-alloy
+      when: "'alloy' in  components_list and kubernetes.alloy.enabled"
+    - role: kubernetes/install-charon
+      when: "'charon' in  components_list and kubernetes.charon.enabled"
+    - role: kubernetes/install-gitlab-runner
+      when: "'gitlab_runner' in  components_list and kubernetes.gitlab_runner.enabled"
+
+- name: Configure kubernetes cluster (per-host)
+  hosts: "{{ target_hosts }}"
+  roles:
+    - role: kubernetes/install-longhorn
+      when: "'longhorn' in  components_list and kubernetes.longhorn.enabled"
+    - role: kubernetes/install-nvidia-devices
+      when: "'nvidia' in  components_list and nvidia is defined and nvidia.enabled"
+
+- name: Configure remaining items
+  hosts: "{{ target_hosts }}"
+  run_once: true
+  roles:
+    - role: kubernetes/configure-namespaces
+      when: "'namespaces' in  components_list"
+    - role: kubernetes/configure-service-accounts
+      when: "'service_accounts' in  components_list"
+    - role: kubernetes/configure-cluster-role-bindings
+      when: "'role_bindings' in  components_list"
+    - role: kubernetes/configure-service-account-tokens
+      when: "'service_account_tokens' in  components_list"

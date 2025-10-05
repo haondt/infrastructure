@@ -130,10 +130,17 @@ a-k3s-upgrade: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 a-k8s-configure: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)
 	@$(MAKE) $(GENERATED_GROUP_VARS) TARGET=$(TARGET)
-	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/kubernetes/configure.yml \
+	@if [ -n "$(COMPONENTS)" ]; then \
+		PLAYBOOK="playbooks/kubernetes/configure-component.yml"; \
+		EXTRA="-e components=$(COMPONENTS)"; \
+	else \
+		PLAYBOOK="playbooks/kubernetes/configure.yml"; \
+		EXTRA=""; \
+	fi; \
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/$$PLAYBOOK \
 		--extra-vars "@../deployment/$(GENERATED_ANSIBLE_VARS)" \
 		--extra-vars "@../deployment/$(GENERATED_GROUP_VARS)" \
-	    -e target_hosts=$(TARGET)
+		$$EXTRA -e target_hosts=$(TARGET)
 
 a-k8s-reset: $(SSH_PRIVATE_KEY) $(GENERATED_ANSIBLE_VARS) $(ANSIBLE_INVENTORY)
 	$(eval GENERATED_GROUP_VARS := build/$(TARGET).ansible.vars.yaml)

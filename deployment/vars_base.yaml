@@ -162,6 +162,15 @@ ansible:
                     }
                   }
 
+                  loki.write "default" {
+                    endpoint {
+                      url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
+                    }
+                    external_labels = {
+                      dev_haondt_cluster = "marble",
+                    }
+                  }
+
 
                   // k8s nodes
                   discovery.kubernetes "nodes" {
@@ -196,6 +205,8 @@ ansible:
                       "meminfo",
                       "diskstats",
                       "filesystem",
+                      "time",
+                      "stat",
                     ]
                   }
 
@@ -324,6 +335,15 @@ ansible:
                     }
                   }
 
+                  loki.write "default" {
+                    endpoint {
+                      url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
+                    }
+                    external_labels = {
+                      dev_haondt_cluster = "gabbro_cluster",
+                    }
+                  }
+
 
                   // k8s nodes
                   discovery.kubernetes "nodes" {
@@ -358,6 +378,8 @@ ansible:
                       "meminfo",
                       "diskstats",
                       "filesystem",
+                      "time",
+                      "stat",
                     ]
                   }
 
@@ -383,8 +405,6 @@ ansible:
                 gitlab-deployments-gabbro:
                   roles:
                     - cluster-admin
-
-
         basalt:
           hosts:
             basalt:
