@@ -209,12 +209,64 @@ ansible:
                       "stat",
                     ]
                   }
-
                   prometheus.scrape "node_exporter" {
                     targets = prometheus.exporter.unix.node_exporter.targets
                     forward_to = [prometheus.remote_write.mimir.receiver]
                   }
 
+                  // pod logs
+                  discovery.kubernetes "pod_logs" {
+                    role = "pod"
+                    selectors {
+                      role = "pod"
+                      field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                    }
+                  }
+
+                  discovery.relabel "pod_logs" {
+                    targets = discovery.kubernetes.pod_logs.targets
+                    rule {
+                      source_labels = ["__meta_kubernetes_namespace"]
+                      action = "replace"
+                      target_label = "dev_haondt_namespace"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_pod"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_container_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_container"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_node_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_node"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_part_of"]
+                      action = "replace"
+                      target_label = "dev_haondt_app"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_component"
+                    }
+                  }
+
+                  loki.relabel "pod_logs" {
+                    forward_to = [loki.process.pod_logs.receiver]
+                  }
+
+                  loki.process "pod_logs" {
+                    stage.label_drop {
+                      values = ["job", "instance", "service_name"]
+                    }
+                    forward_to = [loki.write.default.receiver]
+                  }
 
               charon:
                 enabled: true
@@ -399,6 +451,60 @@ ansible:
                   prometheus.scrape "dcgm_exporter" {
                     targets = discovery.kubernetes.dcgm_exporter.targets
                     forward_to = [prometheus.remote_write.mimir.receiver]
+                  }
+
+                  // pod logs
+                  discovery.kubernetes "pod_logs" {
+                    role = "pod"
+                    selectors {
+                      role = "pod"
+                      field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                    }
+                  }
+
+                  discovery.relabel "pod_logs" {
+                    targets = discovery.kubernetes.pod_logs.targets
+                    rule {
+                      source_labels = ["__meta_kubernetes_namespace"]
+                      action = "replace"
+                      target_label = "dev_haondt_namespace"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_pod"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_container_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_container"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_node_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_node"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_part_of"]
+                      action = "replace"
+                      target_label = "dev_haondt_app"
+                    }
+                    rule {
+                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                      action = "replace"
+                      target_label = "dev_haondt_component"
+                    }
+                  }
+
+                  loki.relabel "pod_logs" {
+                    forward_to = [loki.process.pod_logs.receiver]
+                  }
+
+                  loki.process "pod_logs" {
+                    stage.label_drop {
+                      values = ["job", "instance", "service_name"]
+                    }
+                    forward_to = [loki.write.default.receiver]
                   }
 
               service_accounts:
