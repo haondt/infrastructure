@@ -3,3 +3,4 @@ role_defaults:
   cert_manager:
     version: v1.18.2
     namespace: cert-manager
+    certificates: {}

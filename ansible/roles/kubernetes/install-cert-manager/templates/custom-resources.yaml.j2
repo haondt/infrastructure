@@ -1,0 +1,30 @@
+{% if kubernetes.cert_manager.certificates | length > 0 %}
+{% for k,v in  kubernetes.cert_manager.certificates.items() %}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ k }}
+  namespace: cert-manager
+spec:
+{% if 'dns_names' in v %}
+  dnsNames:
+{% for dns_name in v.dns_names %}
+  - "{{ dns_name }}"
+{% endfor %}
+{% else %}
+  dnsNames: []
+{% endif %}
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  secretName: {{ k }}-tls
+  usages:
+    - digital signature
+    - key encipherment
+  secretTemplate:
+    annotations:
+      reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
+{% endfor %}
+{% endif %}

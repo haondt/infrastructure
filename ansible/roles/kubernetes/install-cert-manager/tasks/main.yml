@@ -81,3 +81,18 @@
                 apiTokenSecretRef:
                   name: cloudflare-api-token
                   key: api-token
+
+- name: Template cert-manager custom resources
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/cert-manager-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+
+- name: Apply cert-manager custom resources
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    src: "{{ haondt.artifacts }}/cert-manager-custom-resources.yaml"
+  delegate_to: 127.0.0.1
+

@@ -127,6 +127,9 @@ ansible:
                   https: 30443
               cert_manager:
                 enabled: true
+                certificates:
+                  haondt-dev-default:
+                    dns_names: ['*.marble.local.haondt.dev', '*.haondt.dev']
               longhorn:
                 enabled: true
                 default_data_path: /mnt/okra/longhorn
@@ -361,6 +364,9 @@ ansible:
                 acme_email: "{{ VARIABLES.cert_manager.acme_email }}"
                 cloudflare_email: "{{ VARIABLES.cert_manager.cloudflare_email }}"
                 cloudflare_api_token: "{{ VARIABLES.cert_manager.cloudflare_api_token }}"
+                certificates:
+                  haondt-dev-default:
+                    dns_names: ['*.gabbro.local.haondt.dev', '*.haondt.dev']
               charon:
                 enabled: true
                 version: charon-k8s-job/v0.0.1
@@ -550,6 +556,9 @@ ansible:
                 acme_email: "{{ VARIABLES.cert_manager.acme_email }}"
                 cloudflare_email: "{{ VARIABLES.cert_manager.cloudflare_email }}"
                 cloudflare_api_token: "{{ VARIABLES.cert_manager.cloudflare_api_token }}"
+                certificates:
+                  haondt-dev-default:
+                    dns_names: ['*.basalt.local.haondt.dev', '*.haondt.dev']
               metallb:
                 enabled: true
                 ip_address_pool:
