@@ -141,7 +141,6 @@ ansible:
                 # controller_image: registry.gitlab.com/haondt/cicd/registry/rathole-controller:main-fd66fa45
                 servers:
                   chert:
-                    remote_addr: rathole.haondt.dev:7035
                     services:
                       haondt: {}
               alloy:
@@ -371,6 +370,18 @@ ansible:
                 enabled: true
                 version: charon-k8s-job/v0.0.1
                 repositories: *charon_repositories
+              rathole:
+                enabled: true
+                version: rathole-operator/v0.0.2
+                servers:
+                  chert:
+                    remote_addr: "{{ VARIABLES.rathole.chert.gabbro.remote_addr }}"
+                    transport:
+                      noise:
+                        remote_public_key: "{{ VARIABLES.rathole.chert.gabbro.transport.noise.remote_public_key }}"
+                    services:
+                      haondt:
+                        token: "{{ VARIABLES.rathole.chert.gabbro.services.haondt.token }}"
               alloy:
                 enabled: true
                 node_exporter:

@@ -19,6 +19,17 @@ VARIABLES:
     acme_email: &cm_acme_email ...
     cloudflare_email: *cm_acme_email
     cloudflare_api_token: &cf_api_token ...
+  rathole:
+    chert:
+      gabbro:
+        remote_addr: ...
+        transport:
+          noise:
+            remote_public_key: ...
+        services:
+          haondt:
+            token: ...
+
 
 ssh:
   private_key: |
