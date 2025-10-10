@@ -31,6 +31,9 @@ spec:
       tokenSecretRef:
         name: rathole-secrets
         key: {{ server_name }}-{{ service_name }}-token
+{% if service_spec.local_addr is defined %}
+      localAddr: {{ service_spec.local_addr }}
+{% endif %}
 {% endfor %}
 {% endfor %}
 ---

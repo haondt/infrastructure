@@ -597,8 +597,10 @@ ansible:
                     services:
                       loki:
                         token: "{{ VARIABLES.rathole.chert.basalt.services.loki.token }}"
+                        local_addr: grafana-loki-http.deployments-grafana.svc.cluster.local:8080
                       mimir:
                         token: "{{ VARIABLES.rathole.chert.basalt.services.mimir.token }}"
+                        local_addr: grafana-mimir-http.deployments-grafana.svc.cluster.local:8080
               service_accounts:
                 gitlab-deployments-basalt:
                   roles:
