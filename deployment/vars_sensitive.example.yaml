@@ -29,6 +29,16 @@ VARIABLES:
         services:
           haondt:
             token: ...
+      basalt:
+        remote_addr: ...
+        transport:
+          noise: 
+            remote_public_key: ...
+        services:
+          loki:
+            token: ...
+          mimir:
+            token: ...
 
 
 ssh:
@@ -78,3 +88,11 @@ ansible:
                     services:
                       haondt:
                         token: your-token
+                  aeeo:
+                    remote_addr: ...
+                    transport:
+                      noise: 
+                        remote_public_key: ...
+                    services:
+                      haondt:
+                        token: ...

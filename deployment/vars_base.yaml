@@ -137,10 +137,13 @@ ansible:
                   longhorn-default: {}
               rathole:
                 enabled: true
-                version: rathole-operator/v0.0.2
-                # controller_image: registry.gitlab.com/haondt/cicd/registry/rathole-controller:main-fd66fa45
+                version: rathole-operator/v0.0.3
+                # controller_image: registry.gitlab.com/haondt/cicd/registry/rathole-controller:main-6ead3ef4
                 servers:
                   chert:
+                    services:
+                      haondt: {}
+                  aeeo:
                     services:
                       haondt: {}
               alloy:
@@ -372,7 +375,7 @@ ansible:
                 repositories: *charon_repositories
               rathole:
                 enabled: true
-                version: rathole-operator/v0.0.2
+                version: rathole-operator/v0.0.3
                 servers:
                   chert:
                     remote_addr: "{{ VARIABLES.rathole.chert.gabbro.remote_addr }}"
@@ -582,6 +585,20 @@ ansible:
               gitlab_runner:
                 enabled: true
                 runner_token: "{{ VARIABLES.gitlab_runner.runner_token }}"
+              rathole:
+                enabled: true
+                version: rathole-operator/v0.0.3
+                servers:
+                  chert:
+                    remote_addr: "{{ VARIABLES.rathole.chert.basalt.remote_addr }}"
+                    transport:
+                      noise:
+                        remote_public_key: "{{ VARIABLES.rathole.chert.basalt.transport.noise.remote_public_key }}"
+                    services:
+                      loki:
+                        token: "{{ VARIABLES.rathole.chert.basalt.services.loki.token }}"
+                      mimir:
+                        token: "{{ VARIABLES.rathole.chert.basalt.services.mimir.token }}"
               service_accounts:
                 gitlab-deployments-basalt:
                   roles:
