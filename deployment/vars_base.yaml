@@ -355,12 +355,9 @@ ansible:
                   global:
                     - *gabbro_lb_ip_range
               ingress_nginx:
-                # load_balancer_ip: *gabbro_cluster_ip
                 enabled: true
-                node_port:
+                host_network:
                   enabled: true
-                  http: 30080
-                  https: 30443
               cert_manager:
                 enabled: true
                 acme_email: "{{ VARIABLES.cert_manager.acme_email }}"

@@ -1,0 +1,35 @@
+controller:
+
+{% if kubernetes.ingress_nginx.host_network.enabled %}
+  dnsPolicy: ClusterFirstWithHostNet
+  hostNetwork: true
+{% endif %}
+
+  service:
+    <<: {}
+{% if kubernetes.ingress_nginx.host_network.enabled %}
+    enabled: false
+{% endif %}
+    annotations:
+      <<: {}
+{% if kubernetes.ingress_nginx.load_balancer_ip is defined %}
+{% if kubernetes.kube_vip_cloud_controller.enabled %}
+      kube-vip.io/loadbalancerIPs: {{ kubernetes.ingress_nginx.load_balancer_ip }}
+{% endif %}
+{% if kubernetes.metallb.enabled %}
+      metallb.io/loadbalancerIPs: {{ kubernetes.ingress_nginx.load_balancer_ip }}
+{% endif %}
+{% endif %}
+
+{% if kubernetes.ingress_nginx.node_port.enabled %}
+    type: NodePort
+    externalTrafficPolicy: null
+{% if kubernetes.ingress_nginx.node_port.https is defined %}
+    nodePorts:
+      https: {{ kubernetes.ingress_nginx.node_port.https }}
+{% endif %}
+{% else %}
+    externalTrafficPolicy: "Local"
+{% endif %}
+
+

@@ -1,5 +1,9 @@
 ---
 role_defaults:
   ingress_nginx:
-    version: v1.13.1
+    version: v4.13.3
     namespace: ingress-nginx
+    node_port:
+      enabled: false
+    host_network:
+      enabled: false

@@ -9,19 +9,26 @@
     dest: "{{ haondt.artifacts }}/kustomization.yaml"
   delegate_to: 127.0.0.1
 
-- name: Build ingress-nginx manifests with kustomize
-  shell: kubectl kustomize "{{ haondt.artifacts }}" --load-restrictor LoadRestrictionsNone
-  register: ingress_nginx_manifests
-  delegate_to: 127.0.0.1
-  vars:
-    ansible_python_interpreter: "{{ ansible_playbook_python }}"
-
-- name: Apply ingress-nginx manifests
-  k8s:
-    kubeconfig: "{{ kubernetes.kubeconfig }}"
-    context: "{{ kubernetes.context }}"
-    state: present
-    definition: "{{ ingress_nginx_manifests.stdout | from_yaml_all }}"
+- name: Install ingress-nginx via Helm
+  block:
+    - name: Template ingress-nginx helm values
+      template:
+        src: ingress-nginx-helm-values.yaml.j2
+        dest: "{{ haondt.artifacts }}/ingress-nginx-helm-values.yaml"
+      delegate_to: 127.0.0.1
+    - name: Install ingress-nginx Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: ingress-nginx
+        chart_ref: ingress-nginx
+        chart_repo_url: https://kubernetes.github.io/ingress-nginx
+        namespace: "{{ kubernetes.ingress_nginx.namespace }}"
+        chart_version: "{{ kubernetes.ingress_nginx.version }}"
+        release_state: present
+        create_namespace: true
+        values_files:
+          - "{{ haondt.artifacts }}/ingress-nginx-helm-values.yaml"
   delegate_to: 127.0.0.1
 
 - name: Wait for ingress-nginx controller to be ready
@@ -49,15 +56,6 @@
     namespace: ingress-nginx
   register: ingress_service
   delegate_to: 127.0.0.1
-
-- name: Display ingress-nginx NodePort information
-  debug:
-    msg: |
-      Ingress-nginx is accessible at:
-      {% for port in ingress_service.resources[0].spec.ports %}
-      - {{ port.name }}: {{ kubernetes.cluster_ip }}:{{ port.nodePort }} ({{ port.protocol }}/{{ port.port }})
-      {% endfor %}
-  when: kubernetes.ingress_nginx.node_port.enabled
 
 
 - block:
