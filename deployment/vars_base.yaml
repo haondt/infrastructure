@@ -148,131 +148,164 @@ ansible:
                       haondt: {}
               alloy:
                 enabled: true
-                node_exporter:
+                deployment:
                   enabled: true
-                  mounts:
-                    okra: /mnt/okra
+                  base_config: |
+                    prometheus.remote_write "mimir" {
+                      endpoint {
+                        url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "gabbro_cluster",
+                      }
+                    }
+
+                    loki.write "default" {
+                      endpoint {
+                        url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "gabbro_cluster",
+                      }
+                    }
+
+                    // blackbox
+                    prometheus.scrape "blackbox_default" {
+                      targets    = prometheus.exporter.blackbox.default.targets
+                      forward_to = [prometheus.remote_write.mimir.receiver]
+                    }
+                  partial_components:
+                    blackbox-default:
+                      component: prometheus.exporter.blackbox
+                      label: default
+                      config: |-
+                        config = "{ modules: { http_2xx: { prober: http, timeout: 5s } } }"
+                daemonset:
+                  enabled: true
+                  node_exporter:
+                    enabled: true
+                    mounts:
+                      okra: /mnt/okra
+                  base_config: |
+                    prometheus.remote_write "mimir" {
+                      endpoint {
+                        url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "marble",
+                      }
+                    }
+
+                    loki.write "default" {
+                      endpoint {
+                        url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "marble",
+                      }
+                    }
+
+
+                    // k8s nodes
+                    discovery.kubernetes "nodes" {
+                      role = "node"
+                      selectors {
+                        role = "node"
+                        field = "metadata.name=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                      }
+                    }
+
+                    prometheus.scrape "nodes" {
+                      targets = discovery.kubernetes.nodes.targets
+                      scheme = "https"
+      
+                      tls_config {
+                        insecure_skip_verify = true
+                      }
+                      
+                      authorization {
+                        credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                      }
+                      
+                      job_name = "kubelet"
+                      metrics_path = "/metrics/resource"
+                      forward_to = [prometheus.remote_write.mimir.receiver]
+                    }
+
+                    // node-exporter
+                    prometheus.exporter.unix "node_exporter" {
+                      set_collectors = [
+                        "cpu",
+                        "meminfo",
+                        "diskstats",
+                        "filesystem",
+                        "time",
+                        "stat",
+                      ]
+                    }
+                    prometheus.scrape "node_exporter" {
+                      targets = prometheus.exporter.unix.node_exporter.targets
+                      forward_to = [prometheus.remote_write.mimir.receiver]
+                    }
+
+                    // pod logs
+                    discovery.kubernetes "pod_logs" {
+                      role = "pod"
+                      selectors {
+                        role = "pod"
+                        field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                      }
+                    }
+
+                    discovery.relabel "pod_logs" {
+                      targets = discovery.kubernetes.pod_logs.targets
+                      rule {
+                        source_labels = ["__meta_kubernetes_namespace"]
+                        action = "replace"
+                        target_label = "dev_haondt_namespace"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_pod"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_container_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_container"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_node_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_node"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_part_of"]
+                        action = "replace"
+                        target_label = "dev_haondt_app"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_component"
+                      }
+                    }
+
+                    loki.relabel "pod_logs" {
+                      forward_to = [loki.process.pod_logs.receiver]
+                    }
+
+                    loki.process "pod_logs" {
+                      stage.label_drop {
+                        values = ["job", "instance", "service_name"]
+                      }
+                      forward_to = [loki.write.default.receiver]
+                    }
                 config_controller:
                   enabled: true
-                  # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-319a7250
-                  version: alloy-config-controller/v0.0.1
+                  version: alloy-config-controller/v0.0.3
+                  # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-bb237a6a
                 version: v1.2.1
-                base_config: |
-                  prometheus.remote_write "mimir" {
-                    endpoint {
-                      url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
-                    }
-                    external_labels = {
-                      dev_haondt_cluster = "marble",
-                    }
-                  }
-
-                  loki.write "default" {
-                    endpoint {
-                      url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
-                    }
-                    external_labels = {
-                      dev_haondt_cluster = "marble",
-                    }
-                  }
-
-
-                  // k8s nodes
-                  discovery.kubernetes "nodes" {
-                    role = "node"
-                    selectors {
-                      role = "node"
-                      field = "metadata.name=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
-                    }
-                  }
-
-                  prometheus.scrape "nodes" {
-                    targets = discovery.kubernetes.nodes.targets
-                    scheme = "https"
-    
-                    tls_config {
-                      insecure_skip_verify = true
-                    }
-                    
-                    authorization {
-                      credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-                    }
-                    
-                    job_name = "kubelet"
-                    metrics_path = "/metrics/resource"
-                    forward_to = [prometheus.remote_write.mimir.receiver]
-                  }
-
-                  // node-exporter
-                  prometheus.exporter.unix "node_exporter" {
-                    set_collectors = [
-                      "cpu",
-                      "meminfo",
-                      "diskstats",
-                      "filesystem",
-                      "time",
-                      "stat",
-                    ]
-                  }
-                  prometheus.scrape "node_exporter" {
-                    targets = prometheus.exporter.unix.node_exporter.targets
-                    forward_to = [prometheus.remote_write.mimir.receiver]
-                  }
-
-                  // pod logs
-                  discovery.kubernetes "pod_logs" {
-                    role = "pod"
-                    selectors {
-                      role = "pod"
-                      field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
-                    }
-                  }
-
-                  discovery.relabel "pod_logs" {
-                    targets = discovery.kubernetes.pod_logs.targets
-                    rule {
-                      source_labels = ["__meta_kubernetes_namespace"]
-                      action = "replace"
-                      target_label = "dev_haondt_namespace"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_pod"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_container_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_container"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_node_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_node"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_part_of"]
-                      action = "replace"
-                      target_label = "dev_haondt_app"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_component"
-                    }
-                  }
-
-                  loki.relabel "pod_logs" {
-                    forward_to = [loki.process.pod_logs.receiver]
-                  }
-
-                  loki.process "pod_logs" {
-                    stage.label_drop {
-                      values = ["job", "instance", "service_name"]
-                    }
-                    forward_to = [loki.write.default.receiver]
-                  }
-
               charon:
                 enabled: true
                 version: charon-k8s-job/v0.0.1
@@ -384,145 +417,180 @@ ansible:
                         token: "{{ VARIABLES.rathole.chert.gabbro.services.haondt.token }}"
               alloy:
                 enabled: true
-                node_exporter:
+                deployment:
                   enabled: true
-                  mounts:
-                    celery: /mnt/celery
-                    pepper: /mnt/pepper
-                    rhyolite: /mnt/rhyolite/gabbro
+                  base_config: |
+                    prometheus.remote_write "mimir" {
+                      endpoint {
+                        url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "gabbro_cluster",
+                      }
+                    }
+
+                    loki.write "default" {
+                      endpoint {
+                        url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "gabbro_cluster",
+                      }
+                    }
+
+                    // blackbox
+                    prometheus.scrape "blackbox_default" {
+                      targets    = prometheus.exporter.blackbox.default.targets
+                      forward_to = [prometheus.remote_write.mimir.receiver]
+                    }
+                  partial_components:
+                    blackbox-default:
+                      component: prometheus.exporter.blackbox
+                      label: default
+                      config: |-
+                        config = "{ modules: { http_2xx: { prober: http, timeout: 5s } } }"
+                daemonset:
+                  enabled: true
+                  node_exporter:
+                    enabled: true
+                    mounts:
+                      celery: /mnt/celery
+                      pepper: /mnt/pepper
+                      rhyolite: /mnt/rhyolite/gabbro
+                  base_config: |
+                    prometheus.remote_write "mimir" {
+                      endpoint {
+                        url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "gabbro_cluster",
+                      }
+                    }
+
+                    loki.write "default" {
+                      endpoint {
+                        url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
+                      }
+                      external_labels = {
+                        dev_haondt_cluster = "gabbro_cluster",
+                      }
+                    }
+
+
+                    // k8s nodes
+                    discovery.kubernetes "nodes" {
+                      role = "node"
+                      selectors {
+                        role = "node"
+                        field = "metadata.name=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                      }
+                    }
+
+                    prometheus.scrape "nodes" {
+                      targets = discovery.kubernetes.nodes.targets
+                      scheme = "https"
+      
+                      tls_config {
+                        insecure_skip_verify = true
+                      }
+                      
+                      authorization {
+                        credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+                      }
+                      
+                      job_name = "kubelet"
+                      metrics_path = "/metrics/resource"
+                      forward_to = [prometheus.remote_write.mimir.receiver]
+                    }
+
+                    // node-exporter
+                    prometheus.exporter.unix "node_exporter" {
+                      set_collectors = [
+                        "cpu",
+                        "meminfo",
+                        "diskstats",
+                        "filesystem",
+                        "time",
+                        "stat",
+                      ]
+                    }
+
+                    prometheus.scrape "node_exporter" {
+                      targets = prometheus.exporter.unix.node_exporter.targets
+                      forward_to = [prometheus.remote_write.mimir.receiver]
+                    }
+
+                    // dgcm-exporter
+                    discovery.kubernetes "dcgm_exporter" {
+                      role = "service"
+                      selectors {
+                        role = "service"
+                        field = "metadata.name=dcgm-exporter,metadata.namespace=dcgm-exporter"
+                      }
+                    }
+                    prometheus.scrape "dcgm_exporter" {
+                      targets = discovery.kubernetes.dcgm_exporter.targets
+                      forward_to = [prometheus.remote_write.mimir.receiver]
+                    }
+
+                    // pod logs
+                    discovery.kubernetes "pod_logs" {
+                      role = "pod"
+                      selectors {
+                        role = "pod"
+                        field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                      }
+                    }
+
+                    discovery.relabel "pod_logs" {
+                      targets = discovery.kubernetes.pod_logs.targets
+                      rule {
+                        source_labels = ["__meta_kubernetes_namespace"]
+                        action = "replace"
+                        target_label = "dev_haondt_namespace"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_pod"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_container_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_container"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_node_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_node"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_part_of"]
+                        action = "replace"
+                        target_label = "dev_haondt_app"
+                      }
+                      rule {
+                        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                        action = "replace"
+                        target_label = "dev_haondt_component"
+                      }
+                    }
+
+                    loki.relabel "pod_logs" {
+                      forward_to = [loki.process.pod_logs.receiver]
+                    }
+
+                    loki.process "pod_logs" {
+                      stage.label_drop {
+                        values = ["job", "instance", "service_name"]
+                      }
+                      forward_to = [loki.write.default.receiver]
+                    }
                 config_controller:
                   enabled: true
-                  version: alloy-config-controller/v0.0.1
+                  version: alloy-config-controller/v0.0.3
+                  # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-bb237a6a
                 version: v1.2.1
-                base_config: |
-                  prometheus.remote_write "mimir" {
-                    endpoint {
-                      url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
-                    }
-                    external_labels = {
-                      dev_haondt_cluster = "gabbro_cluster",
-                    }
-                  }
-
-                  loki.write "default" {
-                    endpoint {
-                      url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
-                    }
-                    external_labels = {
-                      dev_haondt_cluster = "gabbro_cluster",
-                    }
-                  }
-
-
-                  // k8s nodes
-                  discovery.kubernetes "nodes" {
-                    role = "node"
-                    selectors {
-                      role = "node"
-                      field = "metadata.name=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
-                    }
-                  }
-
-                  prometheus.scrape "nodes" {
-                    targets = discovery.kubernetes.nodes.targets
-                    scheme = "https"
-    
-                    tls_config {
-                      insecure_skip_verify = true
-                    }
-                    
-                    authorization {
-                      credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-                    }
-                    
-                    job_name = "kubelet"
-                    metrics_path = "/metrics/resource"
-                    forward_to = [prometheus.remote_write.mimir.receiver]
-                  }
-
-                  // node-exporter
-                  prometheus.exporter.unix "node_exporter" {
-                    set_collectors = [
-                      "cpu",
-                      "meminfo",
-                      "diskstats",
-                      "filesystem",
-                      "time",
-                      "stat",
-                    ]
-                  }
-
-                  prometheus.scrape "node_exporter" {
-                    targets = prometheus.exporter.unix.node_exporter.targets
-                    forward_to = [prometheus.remote_write.mimir.receiver]
-                  }
-
-                  // dgcm-exporter
-                  discovery.kubernetes "dcgm_exporter" {
-                    role = "service"
-                    selectors {
-                      role = "service"
-                      field = "metadata.name=dcgm-exporter,metadata.namespace=dcgm-exporter"
-                    }
-                  }
-                  prometheus.scrape "dcgm_exporter" {
-                    targets = discovery.kubernetes.dcgm_exporter.targets
-                    forward_to = [prometheus.remote_write.mimir.receiver]
-                  }
-
-                  // pod logs
-                  discovery.kubernetes "pod_logs" {
-                    role = "pod"
-                    selectors {
-                      role = "pod"
-                      field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
-                    }
-                  }
-
-                  discovery.relabel "pod_logs" {
-                    targets = discovery.kubernetes.pod_logs.targets
-                    rule {
-                      source_labels = ["__meta_kubernetes_namespace"]
-                      action = "replace"
-                      target_label = "dev_haondt_namespace"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_pod"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_container_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_container"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_node_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_node"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_part_of"]
-                      action = "replace"
-                      target_label = "dev_haondt_app"
-                    }
-                    rule {
-                      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-                      action = "replace"
-                      target_label = "dev_haondt_component"
-                    }
-                  }
-
-                  loki.relabel "pod_logs" {
-                    forward_to = [loki.process.pod_logs.receiver]
-                  }
-
-                  loki.process "pod_logs" {
-                    stage.label_drop {
-                      values = ["job", "instance", "service_name"]
-                    }
-                    forward_to = [loki.write.default.receiver]
-                  }
 
               service_accounts:
                 gitlab-deployments-gabbro:

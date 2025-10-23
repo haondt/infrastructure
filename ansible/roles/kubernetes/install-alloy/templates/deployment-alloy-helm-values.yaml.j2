@@ -1,0 +1,9 @@
+namespaceOverride: {{ kubernetes.alloy.deployment.namespace }}
+nameOverride: deployment-alloy
+controller:
+  type: deployment
+alloy:
+  configMap:
+    create: false
+    name: alloy-config
+    key: config.alloy

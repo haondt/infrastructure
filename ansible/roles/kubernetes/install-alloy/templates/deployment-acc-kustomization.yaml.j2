@@ -1,0 +1,92 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - https://gitlab.com/haondt/CICD/k8s-manifests/-/raw/{{ kubernetes.alloy.config_controller.version }}/alloy-config-controller/bundle.yaml
+
+commonLabels:
+  infra.haondt.dev/managed-by: ansible
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: base-alloy-config
+    patch: |-
+      - op: replace
+        path: /data/config.alloy
+        value: |-
+          {{ lookup('template', 'deployment-config.alloy.j2') | indent(10) }}
+
+{% if kubernetes.alloy.config_controller.controller_image is defined %}
+  - target:
+      kind: Deployment
+      name: alloy-config-controller
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: {{ kubernetes.alloy.config_controller.controller_image }}
+{% endif %}
+
+  - target:
+      kind: Namespace
+      name: alloy
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: {{ kubernetes.alloy.deployment.namespace }}
+      - op: replace
+        path: /metadata/labels/app.kubernetes.io~1name
+        value: {{ kubernetes.alloy.deployment.namespace }}
+  - target:
+      namespace: alloy
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kubernetes.alloy.deployment.namespace }}
+
+  - target:
+      kind: Namespace
+      name: alloy-config-controller
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: {{ kubernetes.alloy.config_controller.deployment.namespace }}
+      - op: replace
+        path: /metadata/labels/app.kubernetes.io~1name
+        value: {{ kubernetes.alloy.config_controller.deployment.namespace }}
+  - target:
+      namespace: alloy-config-controller
+    patch: |-
+      - op: replace
+        path: /metadata/namespace
+        value: {{ kubernetes.alloy.config_controller.deployment.namespace }}
+  - target:
+      kind: RoleBinding
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: {{ kubernetes.alloy.config_controller.deployment.namespace }}
+  - target:
+      kind: ClusterRoleBinding
+      name: alloy-config-controller
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: {{ kubernetes.alloy.config_controller.deployment.namespace }}
+      - op: replace
+        path: /metadata/name
+        value: deployment-alloy-config-controller
+
+  - target:
+      kind: Deployment
+      name: alloy-config-controller
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value: 
+          - name: ACC_ALLOY_NAMESPACE
+            value: "{{ kubernetes.alloy.deployment.namespace }}"
+          - name: ACC_NAMESPACE
+            value: "{{ kubernetes.alloy.config_controller.deployment.namespace }}"
+          - name: ACC_PARTIAL_LABEL_SELECTOR
+            value: deployment.haondt.dev/alloy-deployment=deployment

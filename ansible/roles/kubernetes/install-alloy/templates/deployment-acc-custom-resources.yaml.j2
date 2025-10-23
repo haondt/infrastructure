@@ -1,0 +1,15 @@
+{% for k, partial_component in kubernetes.alloy.deployment.partial_components.items() %}
+---
+apiVersion: alloy.haondt.dev/v1
+kind: AlloyPartialComponent
+metadata:
+  name: {{ k }}
+  namespace: {{ kubernetes.alloy.config_controller.deployment.namespace }}
+  labels:
+    deployment.haondt.dev/alloy-deployment: deployment
+spec:
+  config: |-
+    {{ partial_component.config | indent(4) }}
+  label: {{ partial_component.label }}
+  component: {{ partial_component.component }}
+{% endfor %}

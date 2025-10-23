@@ -1,5 +1,8 @@
-{% if kubernetes.alloy.node_exporter.enabled %}
+namespaceOverride: {{ kubernetes.alloy.daemonset.namespace }}
+nameOverride: daemonset-alloy
 controller:
+  type: daemonset
+{% if kubernetes.alloy.daemonset.node_exporter.enabled %}
   volumes:
     extra:
       - name: proc
@@ -10,7 +13,7 @@ controller:
         hostPath: 
           path: /sys
           type: Directory
-{% for mount_name, mount in kubernetes.alloy.node_exporter.mounts.items() %}
+{% for mount_name, mount in kubernetes.alloy.daemonset.node_exporter.mounts.items() %}
       - name: {{ mount_name }}
         hostPath:
           type: Directory
@@ -18,7 +21,7 @@ controller:
 {% endfor %}
 {% endif %}
 alloy:
-{% if kubernetes.alloy.node_exporter.enabled %}
+{% if kubernetes.alloy.daemonset.node_exporter.enabled %}
   securityContext:
     privileged: true
     runAsUser: 0
@@ -28,7 +31,7 @@ alloy:
         mountPath: /proc
       - name: sys
         mountPath: /sys
-{% for mount_name, mount in kubernetes.alloy.node_exporter.mounts.items() %}
+{% for mount_name, mount in kubernetes.alloy.daemonset.node_exporter.mounts.items() %}
       - name: {{ mount_name }}
         mountPath: {{ mount }}
 {% endfor %}
