@@ -156,7 +156,7 @@ ansible:
                         url = "https://mimir.basalt.local.haondt.dev/api/v1/push"
                       }
                       external_labels = {
-                        dev_haondt_cluster = "gabbro_cluster",
+                        dev_haondt_cluster = "marble",
                       }
                     }
 
@@ -165,7 +165,7 @@ ansible:
                         url = "https://loki.basalt.local.haondt.dev/loki/api/v1/push"
                       }
                       external_labels = {
-                        dev_haondt_cluster = "gabbro_cluster",
+                        dev_haondt_cluster = "marble",
                       }
                     }
 
