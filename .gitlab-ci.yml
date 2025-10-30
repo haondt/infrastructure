@@ -1,12 +1,15 @@
+stages:
+  - bootstrap
+  - scheduled
+
 include:
   - project: 'haondt/CICD/pipelines'
     ref: main
     file: 'generate.yml'
     rules:
       - if: $CI_PIPELINE_SOURCE == "web"
-
 scheduled:
-  stage: bootstrap
+  stage: scheduled
   environment: scheduled
   rules:
     - if: $CI_PIPELINES_SOURCE == "schedule"
