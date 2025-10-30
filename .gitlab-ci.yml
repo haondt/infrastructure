@@ -1,27 +1,10 @@
-variables:
-  PIPELINE_NAME: '$CI_COMMIT_MESSAGE'
-
-workflow:
-  name: '$PIPELINE_NAME'
-
-stages:
-  - bootstrap
-  - base
-
 include:
   - project: 'haondt/CICD/pipelines'
     ref: main
     file: 'generate.yml'
     rules:
       - if: $CI_PIPELINE_SOURCE == "web"
-
-trigger:
-  stage: base
-  environment: trigger
-  image: registry.gitlab.com/haondt/cicd/registry/infrastructure-runner:ansible-refactor-efa5d9e6
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "trigger" && $PLAYBOOK == "a-deb-update"
-  script:
-    - cp $SECRETS deployment/secrets.yml
-    - cd deployment && make a-deb-update TARGET=$TARGET
+  - local: trigger.yml
+    rules:
+      - if: $CI_PIPELINE_SOURCE == "trigger"
 
