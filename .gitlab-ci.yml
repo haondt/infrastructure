@@ -13,9 +13,9 @@ include:
     rules:
       - if: $CI_PIPELINE_SOURCE == "trigger"
 
-default_job:
+dummy:
   stage: .pre
   script:
-    - echo "No pipeline configured for this trigger source"
+    - echo "no op"
   rules:
     - when: never
