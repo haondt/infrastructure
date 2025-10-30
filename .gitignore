@@ -1,4 +1,5 @@
 vars_sensitive.yaml
+deployment/secrets.yml
 
 .terraform/
 *.tfstate
