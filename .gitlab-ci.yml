@@ -16,6 +16,6 @@ trigger:
   rules:
     - if: $CI_PIPELINE_SOURCE == "trigger"
   script:
-    - cp $SECRET deployment/secret.yml
+    - cp $SECRETS deployment/secrets.yml
     - cd deployment && make a-deb-update TARGET=$TARGET
 
