@@ -51,3 +51,8 @@ a-fai-setup: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 		-e target_hosts=$(TARGET) \
 		--ask-pass --ask-become-pass
 
+.PHONY: a-k3s-upgrade
+a-k3s-upgrade: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/upgrade.yml \
+	    -e target_hosts=$(TARGET)
+
