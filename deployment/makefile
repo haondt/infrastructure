@@ -33,4 +33,14 @@ a-deb-update: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/update.yml \
 		-e target_hosts=$(TARGET)
 
+a-k8s-configure: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	@if [ -n "$(COMPONENTS)" ]; then \
+		PLAYBOOK="playbooks/kubernetes/configure-component.yml"; \
+		EXTRA="-e components=$(COMPONENTS)"; \
+	else \
+		PLAYBOOK="playbooks/kubernetes/configure.yml"; \
+		EXTRA=""; \
+	fi; \
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/$$PLAYBOOK \
+		$$EXTRA -e target_hosts=$(TARGET)
 

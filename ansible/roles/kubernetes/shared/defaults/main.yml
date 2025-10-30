@@ -26,6 +26,8 @@ shared_role_defaults:
       namespace: alloy-daemonset
     deployment:
       namespace: alloy-deployment
+  argo:
+    enabled: false
   charon:
     enabled: false
   gitlab_runner:

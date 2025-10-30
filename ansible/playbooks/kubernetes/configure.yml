@@ -43,3 +43,5 @@
     - role: kubernetes/configure-service-accounts
     - role: kubernetes/configure-cluster-role-bindings
     - role: kubernetes/configure-service-account-tokens
+    - role: kubernetes/install-argo
+      when: kubernetes.argo.enabled

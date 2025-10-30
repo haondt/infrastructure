@@ -1,1 +1,4 @@
 enabled: true
+kubeconfig: "~/.kube/config"
+context: gabbro_cluster
+cluster_ip: [[ kubernetes.cluster_ip ]]

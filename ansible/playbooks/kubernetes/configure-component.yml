@@ -49,3 +49,5 @@
       when: "'role_bindings' in  components_list"
     - role: kubernetes/configure-service-account-tokens
       when: "'service_account_tokens' in  components_list"
+    - role: kubernetes/install-argo
+      when: "'argo' in  components_list and kubernetes.argo.enabled"

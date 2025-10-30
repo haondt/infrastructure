@@ -1,1 +1,4 @@
 enabled: true
+kubeconfig: "~/.kube/config"
+context: basalt
+cluster_ip: [[ kubernetes.cluster_ip ]]
