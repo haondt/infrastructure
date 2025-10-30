@@ -44,3 +44,10 @@ a-k8s-configure: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/$$PLAYBOOK \
 		$$EXTRA -e target_hosts=$(TARGET)
 
+
+.PHONY: a-fai-setup
+a-fai-setup: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/fai/post-setup.yml \
+		-e target_hosts=$(TARGET) \
+		--ask-pass --ask-become-pass
+

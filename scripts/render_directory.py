@@ -19,6 +19,9 @@ def _represent_str(dumper, data):
 
 yaml.add_representer(str, _represent_str)
 
+def _to_yaml(data):
+    return yaml.dump(data)
+
 def deep_merge(d1, d2, conflicts="new", path="", overwrite_with_none=True):
     if conflicts not in ["new", "old", "err"]:
         raise ValueError("Unexpected conflict resolution:" + conflicts)
@@ -73,6 +76,8 @@ jinja_env = Environment(
     comment_start_string="[#",
     comment_end_string="#]"
 )
+
+jinja_env.filters['to_yaml'] = _to_yaml
 
 def load_yaml_with_env(file_path, env):
     with open(file_path) as f:
