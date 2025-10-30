@@ -1,3 +1,8 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+
 include:
   - project: 'haondt/CICD/pipelines'
     ref: main
@@ -7,3 +12,7 @@ include:
   - local: trigger.yml
     rules:
       - if: $CI_PIPELINE_SOURCE == "trigger"
+
+default_job:
+  script:
+    - echo "No pipeline configured for this trigger source"
