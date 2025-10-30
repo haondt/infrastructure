@@ -1,0 +1,4 @@
+enabled: true
+storage_classes:
+  longhorn-default:
+    allow_volume_expansion: true

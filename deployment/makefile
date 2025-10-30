@@ -18,7 +18,9 @@ $(INVENTORY): $(INVENTORY_SOURCE) $(INVENTORY_SOURCE_FILES) $(INVENTORY_SOURCE_D
 	python3 $(RENDER_DIRECTORY) $(INVENTORY_SOURCE) -v SECRETS $(SECRETS_FILE) > $@
 
 $(ANSIBLE_INVENTORY): $(INVENTORY)
-	cat $(INVENTORY) | yq '.ansible' > $@
+	@mkdir -p artifacts/ansible
+	cat $(INVENTORY) | yq '.ansible' | \
+		yq eval '.clusters.vars.haondt.artifacts = "$(shell pwd)/artifacts/ansible"' - > $@
 
 $(SSH_PRIVATE_KEY): $(SECRETS_FILE)
 	cat $(SECRETS_FILE) | yq '.ssh.private_key' > $@

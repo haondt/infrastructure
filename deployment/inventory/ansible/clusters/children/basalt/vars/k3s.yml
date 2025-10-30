@@ -1,0 +1,13 @@
+version: "v1.34.1+k3s1"
+node_name: "{{ inventory_hostname }}"
+node_ip: "{{ ansible_host }}"
+cluster_ip: "[[ kubernetes.cluster_ip ]]"
+pod_cidr: "[[ kubernetes.default_pod_cidr ]]"
+cluster_control_plane_ip: "[[ kubernetes.cluster_ip ]]"
+server_config_yaml: |
+  node-ip: "{{ ansible_host }}"
+  disable: servicelb,traefik
+  cluster-cidr: "[[ kubernetes.default_pod_cidr ]]"
+  tls-san:
+    - "[[ kubernetes.cluster_ip ]]"
+extra_server_args: "--secrets-encryption"

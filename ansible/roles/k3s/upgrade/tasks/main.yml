@@ -15,13 +15,6 @@
     installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
   check_mode: false
 
-- name: debug
-  debug:
-    msg: "{{ installed_k3s_version }}"
-- name: debug 2
-  debug:
-    msg: "{{ k3s.version }}"
-
 - name: Update node only if needed
   when: installed_k3s_version is version(k3s.version, '<')
   block:
