@@ -1,0 +1,57 @@
+---
+- name: Debian Update
+  hosts: "{{ target_hosts }}"
+  become: true
+  any_errors_fatal: true
+  serial: 1
+
+  tasks:
+    - name: Pre-update healthcheck
+      command: "uptime"
+      register: pre_sys_hc
+      failed_when: pre_sys_hc.rc != 0
+
+    - name: Pre-update kubernetes healthcheck
+      become: false
+      command: "kubectl get nodes"
+      register: pre_k8s_hc
+      failed_when: pre_k8s_hc.rc != 0
+      when: kubernetes.enabled | default(false)
+
+    - name: Upgrade system packages
+      apt:
+        update_cache: true
+        upgrade: dist
+        autoremove: true
+        autoclean: true
+      register: upgrade_result
+
+    - name: Check if reboot required
+      stat:
+        path: /var/run/reboot-required get_md5=no
+      register: reboot_required_file
+
+    - name: Display upgrade summary
+      debug:
+        msg: |
+          Apt output lines: {{ upgrade_result.stdout_lines | length if upgrade_result.stdout_lines is defined else 0 }}
+          Reboot required: {{ reboot_required_file.stat.exists }}
+
+    - name: Reboot if required
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel/system updates"
+        connect_timeout: 5
+        reboot_timeout: 600
+      when: reboot_required_file.stat.exists
+
+    - name: Post-update system healthcheck
+      command: "uptime"
+      register: post_sys_health
+      failed_when: post_sys_health.rc != 0
+
+    - name: Post-update Kubernetes healthcheck
+      become: false
+      command: "kubectl get nodes"
+      register: post_k8s_health
+      failed_when: post_k8s_health.rc != 0
+      when: kubernetes.enabled | default(false)

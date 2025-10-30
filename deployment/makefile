@@ -5,6 +5,7 @@ INVENTORY_SOURCE_DIRECTORIES := $(shell find $(INVENTORY_SOURCE) -type d)
 INVENTORY_SOURCE_FILES := $(shell find $(INVENTORY_SOURCE) -type f)
 
 ANSIBLE_INVENTORY := build/ansible.inventory.yml
+ANSIBLE_DIRECTORY := ../ansible
 
 SECRETS_FILE := secrets.yml
 
@@ -26,4 +27,10 @@ $(SSH_PRIVATE_KEY): $(SECRETS_FILE)
 .PHONY: a-ping
 a-ping: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ansible -i $(ANSIBLE_INVENTORY) all -m ping
+
+.PHONY: a-deb-update
+a-deb-update: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/update.yml \
+		-e target_hosts=$(TARGET)
+
 
