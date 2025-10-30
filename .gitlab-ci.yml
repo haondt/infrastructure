@@ -14,5 +14,6 @@ include:
       - if: $CI_PIPELINE_SOURCE == "trigger"
 
 default_job:
+  stage: .pre
   script:
     - echo "No pipeline configured for this trigger source"
