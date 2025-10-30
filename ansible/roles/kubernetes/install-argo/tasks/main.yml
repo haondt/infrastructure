@@ -22,5 +22,18 @@
         chart_version: "{{ kubernetes.argo.workflows.version }}"
         release_state: present
         create_namespace: true
-        # values: {}
+        values:
+          server:
+            authModes:
+              - server
+          workflow:
+            serviceAccount:
+              create: true
+              name: argo-workflow
+            rbac:
+              create: true
+          controller:
+            workflowNamespaces:
+              - default
+              - argo-workflows
   delegate_to: 127.0.0.1

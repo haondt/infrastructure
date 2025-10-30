@@ -13,7 +13,7 @@
 
     - name: Pre-update kubernetes healthcheck
       become: false
-      command: "kubectl get nodes"
+      shell: "KUBECONFIG=$HOME/.kube/config kubectl get nodes"
       register: pre_k8s_hc
       failed_when: pre_k8s_hc.rc != 0
       when: kubernetes.enabled | default(false)
@@ -51,7 +51,7 @@
 
     - name: Post-update Kubernetes healthcheck
       become: false
-      command: "kubectl get nodes"
+      shell: "KUBECONFIG=$HOME/.kube/config kubectl get nodes"
       register: post_k8s_health
       failed_when: post_k8s_health.rc != 0
       when: kubernetes.enabled | default(false)
