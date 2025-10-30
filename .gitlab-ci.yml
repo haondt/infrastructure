@@ -5,11 +5,8 @@ include:
     rules:
       - if: $CI_PIPELINE_SOURCE == "web"
 
-stages:
-  - base
-
 scheduled:
-  stage: base
+  stage: bootstrap
   environment: scheduled
   rules:
     - if: $CI_PIPELINES_SOURCE == "schedule"
