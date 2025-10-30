@@ -12,7 +12,7 @@ scheduled:
   stage: scheduled
   environment: scheduled
   rules:
-    - if: $CI_PIPELINES_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "trigger"
   script:
     - echo "test"
 
