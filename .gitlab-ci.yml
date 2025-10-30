@@ -1,6 +1,6 @@
 stages:
   - bootstrap
-  - scheduled
+  - base
 
 include:
   - project: 'haondt/CICD/pipelines'
@@ -8,11 +8,14 @@ include:
     file: 'generate.yml'
     rules:
       - if: $CI_PIPELINE_SOURCE == "web"
-scheduled:
-  stage: scheduled
-  environment: scheduled
+
+trigger:
+  stage: base
+  environment: trigger
+  image: registry.gitlab.com/haondt/cicd/registry/infrastructure-runner:ansible-refactor-efa5d9e6
   rules:
     - if: $CI_PIPELINE_SOURCE == "trigger"
   script:
-    - echo "test"
+    - cp $SECRET deployment/secret.yml
+    - cd deployment && make a-deb-update TARGET=$TARGET
 
