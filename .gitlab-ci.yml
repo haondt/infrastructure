@@ -17,3 +17,5 @@ default_job:
   stage: .pre
   script:
     - echo "No pipeline configured for this trigger source"
+  rules:
+    - when: never
