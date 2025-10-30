@@ -1,0 +1,38 @@
+# GitLab CI/CD Pipeline - Hello World
+# This pipeline runs automatically on every push to the repository
+
+stages:
+  - build
+  - test
+  - deploy
+
+# Default settings for all jobs
+default:
+  image: alpine:latest
+
+# Build job
+build_job:
+  stage: build
+  script:
+    - echo "Hello World from the build stage!"
+    - echo "Building the application..."
+    - echo "Build completed successfully!"
+
+# Test job
+test_job:
+  stage: test
+  script:
+    - echo "Hello World from the test stage!"
+    - echo "Running tests..."
+    - echo "All tests passed!"
+
+# Deploy job
+deploy_job:
+  stage: deploy
+  script:
+    - echo "Hello World from the deploy stage!"
+    - echo "Deploying application..."
+    - echo "Deployment successful!"
+  only:
+    - main
+    - master
