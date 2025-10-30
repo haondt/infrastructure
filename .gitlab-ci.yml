@@ -1,3 +1,9 @@
+variables:
+  PIPELINE_NAME: '$CI_COMMIT_MESSAGE'
+
+workflow:
+  name: '$PIPELINE_NAME'
+
 stages:
   - bootstrap
   - base
