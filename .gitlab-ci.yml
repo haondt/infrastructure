@@ -1,0 +1,14 @@
+include:
+  - project: 'haondt/CICD/pipelines'
+    ref: main
+    file: 'generate.yml'
+    rules:
+      - if: $CI_PIPELINE_SOURCE == "web"
+
+scheduled:
+  environment: scheduled
+  rules:
+    - if: $CI_PIPELINES_SOURCE == "schedule"
+  script:
+    - echo "test"
+
