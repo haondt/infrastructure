@@ -12,4 +12,3 @@ include:
   - local: trigger.yml
     rules:
       - if: $CI_PIPELINE_SOURCE == "trigger"
-
