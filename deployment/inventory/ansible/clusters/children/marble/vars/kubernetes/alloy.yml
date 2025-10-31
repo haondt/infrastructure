@@ -1,0 +1,44 @@
+enabled: true
+deployment:
+  enabled: true
+  base_config: |
+    [[ kubernetes.alloy.prometheus_receiver | indent(4) ]]
+    [[ kubernetes.alloy.loki_receiver | indent(4) ]]
+
+    [[ kubernetes.alloy.blackbox.scrape | indent(4) ]]
+    [[ kubernetes.alloy.kube_state_metrics.scrape | indent(4) ]]
+
+
+    // cluster events
+    // loki.source.kubernetes_events "cluster_events" {
+    //  log_format = "json"
+    //  forward_to = [loki.relabel.cluster_events.receiver]
+    // }
+    // loki.relabel "cluster_events" {
+    //   rule {
+    //     source_labels = ["namespace"]
+    //     action = "replace"
+    //     target_label = "dev_haondt_namespace"
+    //   }
+    //   forward_to = [loki.write.default.receiver]
+    // }
+
+  partial_components:
+    [[kubernetes.alloy.blackbox.partial_components | to_yaml | indent(4)]]
+daemonset:
+  enabled: true
+  node_exporter:
+    enabled: true
+    mounts:
+      okra: /mnt/okra
+  base_config: |
+    [[ kubernetes.alloy.prometheus_receiver | indent(4) ]]
+    [[ kubernetes.alloy.loki_receiver | indent(4) ]]
+
+    [[ kubernetes.alloy.node_metrics | indent(4) ]]
+    [[ kubernetes.alloy.pod_logs | indent(4) ]]
+config_controller:
+  enabled: true
+  version: alloy-config-controller/v0.0.3
+  # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-bb237a6a
+version: v1.2.1

@@ -32,4 +32,6 @@ shared_role_defaults:
     enabled: false
   gitlab_runner:
     enabled: false
+  kube_state_metrics:
+    enabled: false
 role_defaults:

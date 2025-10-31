@@ -28,6 +28,8 @@
       when: "'charon' in  components_list and kubernetes.charon.enabled"
     - role: kubernetes/install-gitlab-runner
       when: "'gitlab_runner' in  components_list and kubernetes.gitlab_runner.enabled"
+    - role: kubernetes/install-kube-state-metrics
+      when: "'kube_state_metrics' in  components_list and kubernetes.kube_state_metrics.enabled"
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"

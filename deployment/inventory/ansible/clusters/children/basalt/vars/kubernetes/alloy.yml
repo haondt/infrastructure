@@ -1,0 +1,13 @@
+enabled: true
+deployment:
+  enabled: true
+  base_config: |
+    [[ kubernetes.alloy.prometheus_receiver | indent(4) ]]
+    [[ kubernetes.alloy.loki_receiver | indent(4) ]]
+
+    [[ kubernetes.alloy.kube_state_metrics.scrape | indent(4) ]]
+config_controller:
+  enabled: true
+  version: alloy-config-controller/v0.0.3
+  # controller_image: registry.gitlab.com/haondt/cicd/registry/alloy-config-controller:main-bb237a6a
+version: v1.2.1
