@@ -1,0 +1,4 @@
+---
+role_defaults:
+  smartctl_exporter:
+    version: 0.16.0

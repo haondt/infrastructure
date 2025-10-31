@@ -26,16 +26,19 @@ daemonset:
 
     // dgcm-exporter
     discovery.kubernetes "dcgm_exporter" {
-      role = "service"
+      role = "pod"
       selectors {
-        role = "service"
-        field = "metadata.name=dcgm-exporter,metadata.namespace=dcgm-exporter"
+        role = "pod"
+        field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname) + ",metadata.namespace=dcgm-exporter"
+        label = "app.kubernetes.io/component=dcgm-exporter,app.kubernetes.io/instance=dcgm-exporter,app.kubernetes.io/name=dcgm-exporter"
       }
     }
     prometheus.scrape "dcgm_exporter" {
       targets = discovery.kubernetes.dcgm_exporter.targets
       forward_to = [prometheus.remote_write.mimir.receiver]
     }
+
+    [[ kubernetes.alloy.smartctl.scrape | indent(4) ]]
 
 config_controller:
   enabled: true

@@ -32,6 +32,8 @@
       when: "'kube_state_metrics' in  components_list and kubernetes.kube_state_metrics.enabled"
     - role: kubernetes/install-infrastructure-jobs
       when: "'infrastructure_jobs' in  components_list and kubernetes.infrastructure_jobs.enabled"
+    - role: kubernetes/install-smartctl-exporter
+      when: "'smartctl_exporter' in  components_list and kubernetes.smartctl_exporter.enabled"
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"

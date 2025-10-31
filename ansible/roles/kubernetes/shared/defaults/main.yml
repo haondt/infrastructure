@@ -36,4 +36,6 @@ shared_role_defaults:
     enabled: false
   infrastructure_jobs:
     enabled: false
+  smartctl_exporter:
+    enabled: false
 role_defaults:
