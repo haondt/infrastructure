@@ -28,6 +28,8 @@
       when: kubernetes.gitlab_runner.enabled
     - role: kubernetes/install-kube-state-metrics
       when: kubernetes.kube_state_metrics.enabled
+    - role: kubernetes/install-infrastructure-jobs
+      when: kubernetes.infrastructure_jobs.enabled
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"

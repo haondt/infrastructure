@@ -34,4 +34,6 @@ shared_role_defaults:
     enabled: false
   kube_state_metrics:
     enabled: false
+  infrastructure_jobs:
+    enabled: false
 role_defaults:

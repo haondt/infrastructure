@@ -1,21 +1,8 @@
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "web"
-    - if: $CI_PIPELINE_SOURCE == "trigger"
 
 include:
   - project: 'haondt/CICD/pipelines'
     ref: main
     file: 'generate.yml'
-    rules:
-      - if: $CI_PIPELINE_SOURCE == "web"
-  - local: trigger.yml
-    rules:
-      - if: $CI_PIPELINE_SOURCE == "trigger"
-
-dummy:
-  stage: .pre
-  script:
-    - echo "no op"
-  rules:
-    - when: never

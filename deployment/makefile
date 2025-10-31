@@ -58,3 +58,9 @@ a-k3s-upgrade: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/upgrade.yml \
 	    -e target_hosts=$(TARGET)
 
+.PHONY: a-k8s-uninstall
+a-k8s-uninstall: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/kubernetes/uninstall.yml \
+	    -e target_hosts=$(TARGET) \
+		-e components=$(COMPONENTS)
+

@@ -3,8 +3,7 @@
   set_fact:
     kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
 
-- name: Install argo-workflows via helm
-  when: kubernetes.argo.workflows.enabled
+- name: Uninstall argo-workflows via helm
   block:
     - name: Add argo Helm repo
       kubernetes.core.helm_repository:
@@ -12,7 +11,7 @@
         context: "{{ kubernetes.context }}"
         name: argo
         repo_url: https://argoproj.github.io/argo-helm
-    - name: Install argo-workflows Helm chart
+    - name: Uninstall argo-workflows Helm chart
       kubernetes.core.helm:
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
@@ -20,8 +19,7 @@
         chart_ref: argo/argo-workflows
         release_namespace: "argo-workflows"
         chart_version: "{{ kubernetes.argo.workflows.version }}"
-        release_state: present
-        create_namespace: true
+        release_state: absent
         values:
           server:
             authModes:
@@ -38,14 +36,11 @@
               - default
               - argo-workflows
 
-    - name: Template custom resources
-      template:
-        src: argo-workflows-custom-resources.yaml.j2
-        dest: "{{ haondt.artifacts }}/argo-workflows-custom-resources.yaml"
-    - name: Apply custom resources
+    - name: Delete namespace
       k8s:
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
-        state: present
-        src: "{{ haondt.artifacts }}/argo-workflows-custom-resources.yaml"
+        state: absent
+        kind: namespace
+        name: argo-workflows
   delegate_to: 127.0.0.1
