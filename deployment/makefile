@@ -64,3 +64,10 @@ a-k8s-uninstall: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	    -e target_hosts=$(TARGET) \
 		-e components=$(COMPONENTS)
 
+
+.PHONY: a-k3s-install
+a-k3s-install: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/install.yml \
+	    -e target_hosts=$(TARGET) \
+		-e components=$(COMPONENTS)
+

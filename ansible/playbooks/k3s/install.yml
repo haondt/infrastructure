@@ -5,7 +5,6 @@
   roles:
     - role: k3s/prereq
 
-
 - name: Install K3S servers
   hosts: "{{ target_hosts }}"
   become: true

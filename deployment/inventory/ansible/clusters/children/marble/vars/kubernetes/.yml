@@ -1,3 +1,5 @@
 enabled: true
 kubeconfig: "[[ kubernetes.kubeconfig ]]"
 context: marble
+cluster_name: marble
+cluster_ip: "[[ kubernetes.cluster_ip ]]"

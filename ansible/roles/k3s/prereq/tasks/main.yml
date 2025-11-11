@@ -18,6 +18,7 @@
     name: fs.inotify.max_user_instances
     value: "4096"
     state: present
+    sysctl_set: true
     reload: true
 
 - name: Populate service facts
@@ -50,8 +51,8 @@
 
 - name: Setup alternative K3s directory
   when:
-    - k3s_server_location is defined
-    - k3s_server_location != "/var/lib/rancher/k3s"
+    - k3s.server_location is defined
+    - k3s.server_location != "/var/lib/rancher/k3s"
   block:
     - name: Make rancher directory
       ansible.builtin.file:
@@ -61,7 +62,7 @@
     - name: Create symlink
       ansible.builtin.file:
         dest: /var/lib/rancher/k3s
-        src: "{{ k3s_server_location }}"
+        src: "{{ k3s.server_location }}"
         force: true
         state: link
 
@@ -98,7 +99,7 @@
       ansible.builtin.shell: |
         docker run --network host --rm ghcr.io/kube-vip/kube-vip:{{ (kube_vip_release.content | from_json).name }} manifest daemonset \
             --interface {{ node_interface }} \
-            --address {{ k3s_cluster_control_plane_ip }} \
+            --address {{ k3s.cluster_control_plane_ip }} \
             --inCluster \
             --taint \
             --controlplane \
@@ -132,10 +133,10 @@
         src: "{{ item }}"
         dest: "/var/lib/rancher/k3s/server/manifests"
         mode: "0600"
-      loop: "{{ k3s_extra_manifests }}"
+      loop: "{{ k3s.extra_manifests }}"
 
 - name: Setup optional private registry configuration
-  when: registries_config_yaml is defined
+  when: k3s.registries_config_yaml is defined
   block:
     - name: Make k3s config directory
       ansible.builtin.file:
@@ -144,6 +145,6 @@
         state: directory
     - name: Copy config values
       ansible.builtin.copy:
-        content: "{{ registries_config_yaml }}"
+        content: "{{ k3s.registries_config_yaml }}"
         dest: "/etc/rancher/k3s/registries.yaml"
         mode: "0644"

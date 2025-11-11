@@ -72,7 +72,6 @@ ansible:
       children:
         marble:
           vars:
-            k3s_token: your-k3s-token (md rnd 64 -t hex | clip)
             kubernetes:
               cert_manager:
                 acme_email: &acme_email email@domain.com
