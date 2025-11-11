@@ -21,6 +21,28 @@
     sysctl_set: true
     reload: true
 
+- name: Add systemd unit to reapply sysctl after boot
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/reload-sysctl-late.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Reapply sysctl after boot
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c "/usr/bin/sleep 5; /usr/sbin/sysctl --system"
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start late sysctl reload
+  ansible.builtin.systemd:
+    name: reload-sysctl-late.service
+    enabled: true
+    state: started
+
 - name: Populate service facts
   ansible.builtin.service_facts:
 
