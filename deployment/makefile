@@ -35,6 +35,21 @@ a-deb-update: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/update.yml \
 		-e target_hosts=$(TARGET)
 
+.PHONY: a-deb-snapraid-install
+a-deb-snapraid-install: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/snapraid/install.yml \
+		-e target_hosts=$(TARGET)
+
+.PHONY: a-deb-snapraid-sync
+a-deb-snapraid-sync: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/snapraid/sync.yml \
+		-e target_hosts=$(TARGET)
+
+.PHONY: a-deb-snapraid-scrub
+a-deb-snapraid-scrub: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/snapraid/scrub.yml \
+		-e target_hosts=$(TARGET)
+
 a-k8s-configure: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	@if [ -n "$(COMPONENTS)" ]; then \
 		PLAYBOOK="playbooks/kubernetes/configure-component.yml"; \

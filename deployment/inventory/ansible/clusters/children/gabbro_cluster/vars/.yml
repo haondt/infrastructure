@@ -1,5 +1,14 @@
 ansible_user: gabbro
-ansible_ssh_private_key_file: [[ ssh.private_key_file ]]
+ansible_ssh_private_key_file: [[ssh.private_key_file]]
 ansible_python_interpreter: /usr/bin/python3
 ssh:
   [[ ssh | to_yaml | indent(2) ]]
+snapraid:
+  disks:
+    parity:
+      - mount: /mnt/carrot-1
+    data:
+      - label: carrot-2
+        mount: /mnt/carrot-2
+      - label: carrot-3
+        mount: /mnt/carrot-3

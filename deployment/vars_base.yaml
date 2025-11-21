@@ -60,36 +60,8 @@ ansible:
     k3s_clusters:
       children:
         gabbro_cluster:
-          hosts:
-            gabbro:
-              ansible_host: *gabbro_cluster_ip
-              nvidia:
-                enabled: true
           vars:
-            ansible_user: gabbro
-            ansible_ssh_private_key_file: build/id_rsa
-            k3s_version: v1.33.3+k3s1
-            k3s_node_name: "{% raw %}{{ inventory_hostname }}{% endraw %}"
-            k3s_node_ip: "{% raw %}{{ ansible_host }}{% endraw %}"
-            k3s_cluster_ip: *gabbro_cluster_ip
-            k3s_pod_cidr: *default_pod_cidr
-            k3s_cluster_control_plane_ip: "{% raw %}{{ k3s_cluster_ip }}{% endraw %}"
-            k3s_server_config_yaml: |
-              {% raw %}
-              node-ip: "{{ ansible_host }}"
-              disable: servicelb,traefik
-              flannel-backend: none
-              disable-network-policy: true
-              cluster-cidr: "{{ k3s_pod_cidr }}"
-              tls-san:
-                - "{{ k3s_cluster_control_plane_ip }}"
-              kubelet-arg: "allowed-unsafe-sysctls=net.ipv4.*,net.ipv6.*"
-              {% endraw %}
-            k3s_extra_server_args: "--secrets-encryption"
             kubernetes:
-              kubeconfig: "~/.kube/config"
-              context: gabbro_cluster
-              cluster_ip: *gabbro_cluster_ip
               metallb:
                 enabled: true
                 ip_address_pool:

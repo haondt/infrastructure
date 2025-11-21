@@ -1,0 +1,9 @@
+---
+- name: Debian SnapRAID Install
+  hosts: "{{ target_hosts }}"
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  serial: 1
+  roles:
+    - role: snapraid/install
