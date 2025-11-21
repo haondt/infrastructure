@@ -50,6 +50,11 @@ a-deb-snapraid-scrub: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/snapraid/scrub.yml \
 		-e target_hosts=$(TARGET)
 
+.PHONY: a-deb-mergerfs-install
+a-deb-mergerfs-install: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/debian/mergerfs/install.yml \
+		-e target_hosts=$(TARGET)
+
 a-k8s-configure: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	@if [ -n "$(COMPONENTS)" ]; then \
 		PLAYBOOK="playbooks/kubernetes/configure-component.yml"; \

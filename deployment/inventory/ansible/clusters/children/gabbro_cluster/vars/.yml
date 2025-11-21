@@ -12,3 +12,12 @@ snapraid:
         mount: /mnt/carrot-2
       - label: carrot-3
         mount: /mnt/carrot-3
+mergerfs:
+  version: 2.41.1
+  package: bookworm_amd64
+  branches:
+    - /mnt/carrot-2/mergerfs
+    - /mnt/carrot-3/mergerfs
+  mountpoint: /mnt/carrot
+  options:
+    minfreespace: "100G"
