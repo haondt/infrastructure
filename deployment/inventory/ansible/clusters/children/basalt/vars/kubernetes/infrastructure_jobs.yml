@@ -27,3 +27,12 @@ cron_jobs:
       deployment.haondt.dev/name: chert-deb-update
       deployment.haondt.dev/part-of: infrastructure-jobs
       deployment.haondt.dev/project: infrastructure
+  gabbro-snapraid-sync:
+    target: a-deb-snapraid-sync
+    arguments:
+      TARGET: gabbro
+    schedule: "0 0 * * 3"
+    labels:
+      deployment.haondt.dev/name: gabbro-cluster-snapraid-sync
+      deployment.haondt.dev/part-of: infrastructure-jobs
+      deployment.haondt.dev/project: infrastructure
