@@ -12,6 +12,9 @@ snapraid:
         mount: /mnt/carrot-2
       - label: carrot-3
         mount: /mnt/carrot-3
+  extra_config: |
+    exclude /mergerfs/gabbro/qbittorrent/incomplete/
+    exclude /mergerfs/gabbro/media_downloads/
 mergerfs:
   version: 2.41.1
   package: bookworm_amd64

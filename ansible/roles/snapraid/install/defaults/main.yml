@@ -1,2 +1,4 @@
 ---
-role_defaults: {}
+role_defaults:
+  extra_config: ""
+
