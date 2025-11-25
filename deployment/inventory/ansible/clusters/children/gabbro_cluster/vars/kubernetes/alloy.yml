@@ -14,7 +14,7 @@ daemonset:
   node_exporter:
     enabled: true
     mounts:
-      celery: /mnt/celery
+      carrot: /mnt/carrot
       pepper: /mnt/pepper
       rhyolite: /mnt/rhyolite/gabbro
   base_config: |
