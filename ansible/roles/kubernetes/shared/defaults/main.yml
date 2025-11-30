@@ -24,8 +24,10 @@ shared_role_defaults:
     enabled: false
     daemonset:
       namespace: alloy-daemonset
+      enabled: false
     deployment:
       namespace: alloy-deployment
+      enabled: false
   argo:
     enabled: false
   charon:

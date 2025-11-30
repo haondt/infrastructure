@@ -1,0 +1,36 @@
+enabled: true
+version: charon-k8s-job/v0.0.3
+repositories:
+  default:
+    config_map:
+      repository: |-
+        max_snapshots: 10
+    secret:
+      repository: |-
+        password: "[[ SECRETS.charon.repo_password ]]"
+  gcs-gabbro:
+    config_map:
+      repository: |-
+        backend:
+          type: gcs_bucket
+          bucket: "[[ SECRETS.charon.gcs.bucket ]]"
+          credentials: /config/gcs/credentials.json
+    secret:
+      credentials.json: |-
+        [[ SECRETS.charon.gcs.credentials | indent (24) ]]
+  hzsb:
+    config_map:
+      repository: |-
+        backend:
+          type: rclone
+          rclone_config:
+            type: ftp
+            port: 21
+            explicit_tls: "true"
+    secret:
+      repository: |-
+        backend:
+          rclone_config:
+            host: "[[ SECRETS.charon.hzsb.rclone.host ]]"
+            user: "[[ SECRETS.charon.hzsb.rclone.user ]]"
+            pass: "[[ SECRETS.charon.hzsb.rclone.pass ]]"

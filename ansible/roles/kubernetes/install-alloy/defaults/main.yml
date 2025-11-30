@@ -2,14 +2,12 @@
 role_defaults:
   alloy:
     daemonset:
-      enabled: false
       node_exporter:
         enabled: false
         mounts: {}
       partial_components: {}
       base_config: ''
     deployment:
-      enabled: false
       partial_components: {}
       base_config: ''
     version: v1.2.1

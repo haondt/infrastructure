@@ -58,3 +58,68 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "list"]
+
+{% if kubernetes.alloy.enabled and kubernetes.alloy.daemonset.enabled %}
+---
+apiVersion: alloy.haondt.dev/v1
+kind: AlloyPartialConfig
+metadata:
+  labels:
+    deployment.haondt.dev/alloy-deployment: daemonset
+  name: charon-logs
+  namespace: {{ kubernetes.charon.namespace }}
+spec:
+  config: |-
+    // charon logs
+    discovery.relabel "charon_logs" {
+        targets = discovery.relabel.pod_logs.output
+
+        rule {
+            source_labels = ["__meta_kubernetes_pod_label_deployment_haondt_dev_name"]
+            regex = "charon"
+            action = "keep"
+        }
+
+        rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            regex = "deployments-.*"
+            action = "keep"
+        }
+    }
+    loki.source.kubernetes "charon_logs" {
+        targets    = discovery.relabel.charon_logs.output
+        forward_to = [loki.process.charon_logs.receiver]
+    }
+
+    loki.process "charon_logs" {
+        stage.json {
+            drop_malformed = true
+            expressions = {
+                level = "",
+                message = "",
+                source_context = "name",
+                timestamp = "time",
+            }
+        }
+
+        stage.timestamp {
+            source = "timestamp"
+            format = "RFC3339Nano"
+        }
+
+        stage.structured_metadata {
+          values = { 
+            "message" = "",
+            "source_context" = "",
+          }
+        }
+
+        stage.labels {
+          values = { 
+            "level" = "",
+          }
+        }
+
+        forward_to = [loki.relabel.pod_logs.receiver]
+    }
+{% endif %}

@@ -79,10 +79,6 @@ ansible:
                 certificates:
                   haondt-dev-default:
                     dns_names: ["*.gabbro.local.haondt.dev", "*.haondt.dev"]
-              charon:
-                enabled: true
-                version: charon-k8s-job/v0.0.3
-                repositories: *charon_repositories
               rathole:
                 enabled: true
                 version: rathole-operator/v0.0.3
@@ -146,10 +142,6 @@ ansible:
                 ip_address_pool:
                   global:
                     - *basalt_lb_ip_range
-              charon:
-                enabled: true
-                version: charon-k8s-job/v0.0.3
-                repositories: *charon_repositories
               gitlab_runner:
                 enabled: true
                 runner_token: "{{ VARIABLES.gitlab_runner.runner_token }}"
