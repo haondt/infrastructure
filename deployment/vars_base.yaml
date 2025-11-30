@@ -81,7 +81,7 @@ ansible:
                     dns_names: ["*.gabbro.local.haondt.dev", "*.haondt.dev"]
               charon:
                 enabled: true
-                version: charon-k8s-job/v0.0.1
+                version: charon-k8s-job/v0.0.3
                 repositories: *charon_repositories
               rathole:
                 enabled: true
@@ -148,7 +148,7 @@ ansible:
                     - *basalt_lb_ip_range
               charon:
                 enabled: true
-                version: charon-k8s-job/v0.0.1
+                version: charon-k8s-job/v0.0.3
                 repositories: *charon_repositories
               gitlab_runner:
                 enabled: true
