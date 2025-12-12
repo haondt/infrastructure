@@ -1,5 +1,5 @@
 enabled: true
-version: charon-k8s-job/v0.0.3
+version: charon-k8s-job/v0.0.4
 repositories:
   default:
     config_map:
