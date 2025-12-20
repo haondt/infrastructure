@@ -1,0 +1,36 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install kgateway crds via helm
+  delegate_to: 127.0.0.1
+  block:
+    - name: Install kgateway-crds Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: kgateway-crds
+        chart_ref: oci://cr.kgateway.dev/kgateway-dev/charts/kgateway-crds
+        release_namespace: "{{ kubernetes.kgateway.namespace }}"
+        chart_version: "{{ kubernetes.kgateway.crds.version }}"
+        release_state: present
+        create_namespace: true
+
+- name: Install kgateway via helm
+  delegate_to: 127.0.0.1
+  block:
+    - name: Install kgateway Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: kgateway
+        chart_ref: oci://cr.kgateway.dev/kgateway-dev/charts/kgateway
+        release_namespace: "{{ kubernetes.kgateway.namespace }}"
+        chart_version: "{{ kubernetes.kgateway.crds.version }}"
+        release_state: present
+        create_namespace: true
+        values:
+          controller:
+            image:
+              pullPolicy: Always

@@ -1,0 +1,14 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install kubernetes gateway api crds
+  delegate_to: 127.0.0.1
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    src: "https://github.com/kubernetes-sigs/gateway-api/releases/download/{{ kubernetes.kubernetes_gateway_api_crds.version }}/standard-install.yaml"
+    server_side_apply:
+      field_manager: ansible

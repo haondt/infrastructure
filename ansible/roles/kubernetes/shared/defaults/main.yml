@@ -40,3 +40,5 @@ shared_role_defaults:
     enabled: false
   smartctl_exporter:
     enabled: false
+  kgateway:
+    enabled: false

@@ -30,6 +30,8 @@
       when: kubernetes.kube_state_metrics.enabled
     - role: kubernetes/install-infrastructure-jobs
       when: kubernetes.infrastructure_jobs.enabled
+    - role: kubernetes/install-kgateway
+      when: kubernetes.kgateway.enabled
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"
