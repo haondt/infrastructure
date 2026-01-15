@@ -1,0 +1,9 @@
+---
+- name: Debian Unbound Update Configuration
+  hosts: "{{ target_hosts }}"
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  serial: 1
+  roles:
+    - role: unbound/configure

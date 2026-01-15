@@ -1,0 +1,19 @@
+config_file: flint.conf
+local_zones:
+  flint: &flint_ip 192.168.1.132
+  flint.local.haondt.dev: *flint_ip
+
+  rhyolite: &rhyolite_ip 192.168.1.88
+  rhyolite.local.haondt.dev: *rhyolite_ip
+
+  gabbro: &gabbro_ip 192.168.1.78
+  gabbro.local.haondt.dev: *gabbro_ip
+
+  aurora: 192.168.1.116
+
+  basalt: &basalt_ip 192.168.1.139
+  basalt.local.haondt.dev: *basalt_ip
+
+  # control plane ip is 192.168.1.100, ingress is on 192.168.1.101
+  marble.local.haondt.dev: 192.168.1.101
+  marble-kg.local.haondt.dev: 192.168.1.110
