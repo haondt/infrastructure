@@ -34,3 +34,33 @@
           controller:
             image:
               pullPolicy: Always
+
+- name: Template custom resources
+  delegate_to: 127.0.0.1
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/kgateway-custom-resources.yaml"
+
+- name: Apply custom resources
+  delegate_to: 127.0.0.1
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    src: "{{ haondt.artifacts }}/kgateway-custom-resources.yaml"
+
+- block:
+  - name: Template kgateway Calico custom resources
+    template:
+      src: calico-resources.yaml.j2
+      dest: "{{ haondt.artifacts }}/kgateway-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+
+  - name: Apply kgateway Calico custom resources
+    k8s:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+      context: "{{ kubernetes.context }}"
+      state: present
+      src: "{{ haondt.artifacts }}/kgateway-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+  when: kubernetes.calico.enabled

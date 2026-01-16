@@ -1,6 +1,6 @@
 ---
 role_defaults:
   cert_manager:
-    version: v1.18.2
+    version: v1.19.2
     namespace: cert-manager
     certificates: {}

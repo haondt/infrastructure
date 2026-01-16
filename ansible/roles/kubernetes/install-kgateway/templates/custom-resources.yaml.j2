@@ -1,0 +1,112 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ kubernetes.kgateway.gateway_name }}
+  namespace: {{ kubernetes.kgateway.namespace }}
+{% if kubernetes.cert_manager.enabled %}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+{% endif %}
+spec:
+  gatewayClassName: kgateway
+  infrastructure:
+    parametersRef:
+      name: {{ kubernetes.kgateway.gateway_name }}
+      group: gateway.kgateway.dev
+      kind: GatewayParameters
+  listeners:
+{% for name, l in kubernetes.kgateway.listeners.items() %}
+    - protocol: HTTPS
+      port: 443
+      name: "{{ name }}"
+      hostname: "{{ l.hostname }}"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: haondt-kgateway-default-tls # same secret name = single cert
+{% endfor %}
+          
+{% if kubernetes.kgateway.load_balancer_ip is defined %}
+  addresses:
+    - type: IPAddress
+      value: '{{ kubernetes.kgateway.load_balancer_ip }}'
+{% endif %}
+---
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: GatewayParameters
+metadata:
+  name: {{ kubernetes.kgateway.gateway_name }}
+  namespace: {{ kubernetes.kgateway.namespace }}
+spec:
+  kube: 
+    service:
+{% if kubernetes.kgateway.node_port.enabled %}
+      type: NodePort
+      externalTrafficPolicy: null
+{% if kubernetes.kgateway.node_port.https is defined %}
+      nodePorts:
+        https: {{ kubernetes.kgateway.node_port.https }}
+{% endif %}
+{% else %}
+      externalTrafficPolicy: "Local"
+{% endif %}
+      extraAnnotations:
+        <<: {}
+{% if kubernetes.kgateway.load_balancer_ip is defined %}
+{% if kubernetes.kube_vip_cloud_controller.enabled %}
+        kube-vip.io/loadbalancerIPs: {{ kubernetes.kgateway.load_balancer_ip }}
+{% endif %}
+{% if kubernetes.metallb.enabled %}
+        metallb.io/loadBalancerIPs: {{ kubernetes.kgateway.load_balancer_ip }}
+{% endif %}
+{% endif %}
+
+---
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: HTTPListenerPolicy
+metadata:
+  name: {{ kubernetes.kgateway.gateway_name }}-access-logs
+  namespace: {{ kubernetes.kgateway.namespace }}
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: {{ kubernetes.kgateway.gateway_name }}
+  accessLog:
+    - fileSink:
+      path: /dev/stdout
+      jsonFormat:
+        start_time: "%START_TIME%"
+        method: "%REQ(X-ENVOY-ORIGINAL-METHOD?:METHOD)%"
+        path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+        protocol: "%PROTOCOL%"
+        response_code: "%RESPONSE_CODE%"
+        response_flags: "%RESPONSE_FLAGS%"
+        bytes_received: "%BYTES_RECEIVED%"
+        bytes_sent: "%BYTES_SENT%"
+        total_duration: "%DURATION%"
+        resp_backend_service_time: "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"
+        req_x_forwarded_for: "%REQ(X-FORWARDED-FOR)%"
+        user_agent: "%REQ(USER-AGENT)%"
+        request_id: "%REQ(X-REQUEST-ID)%"
+        authority: "%REQ(:AUTHORITY)%"
+        backendHost: "%UPSTREAM_HOST%"
+        backendCluster: "%UPSTREAM_CLUSTER%"
+---
+apiVersion: gateway.kgateway.dev/v1alpha1
+kind: HTTPListenerPolicy
+metadata:
+  name: {{ kubernetes.kgateway.gateway_name }}-upgrades
+  namespace: {{ kubernetes.kgateway.namespace }}
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ kubernetes.kgateway.gateway_name }}
+  upgradeConfig:
+    enabledUpgrades:
+      - websocket
