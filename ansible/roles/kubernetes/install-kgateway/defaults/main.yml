@@ -8,5 +8,6 @@ role_defaults:
     gateway_name: haondt-default
     node_port:
       enabled: false
+      ports: {}
     listeners: {}
 

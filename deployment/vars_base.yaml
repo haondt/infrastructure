@@ -3,16 +3,9 @@ SHARED:
     pod_cidr: &default_pod_cidr 10.42.0.0/16
   marble:
     cluster_ip: &marble_cluster_ip 192.168.1.100
-    ingress_ip: &marble_ingress_ip 192.168.1.101
-    load_balancer_ip_range: &load_balancer_ip_range 192.168.1.101-192.168.1.110
-    pod_cidr: &marble_pod_cidr 10.42.0.0/16
   basalt:
     cluster_ip: &basalt_cluster_ip 192.168.1.139
     load_balancer_ip_range: &basalt_lb_ip_range 192.168.1.201-192.168.1.205
-  gabbro:
-    cluster_ip: &gabbro_cluster_ip 192.168.1.78
-    load_balancer_ip_range: &gabbro_lb_ip_range 192.168.1.211-192.168.1.215
-
 terraform:
   default:
     backend_config: &tf_backend
@@ -30,11 +23,11 @@ terraform:
               - name: glance
                 type: A
                 proxied: true
-                content: { { VARIABLES.chert_ip } }
+                content: {{ VARIABLES.chert_ip }}
               - name: status
                 type: A
                 proxied: true
-                content: { { VARIABLES.chert_ip } }
+                content: {{ VARIABLES.chert_ip }}
 
   clusters:
     backend_config:
@@ -62,23 +55,6 @@ ansible:
         gabbro_cluster:
           vars:
             kubernetes:
-              metallb:
-                enabled: true
-                ip_address_pool:
-                  global:
-                    - *gabbro_lb_ip_range
-              ingress_nginx:
-                enabled: true
-                host_network:
-                  enabled: true
-              cert_manager:
-                enabled: true
-                acme_email: "{{ VARIABLES.cert_manager.acme_email }}"
-                cloudflare_email: "{{ VARIABLES.cert_manager.cloudflare_email }}"
-                cloudflare_api_token: "{{ VARIABLES.cert_manager.cloudflare_api_token }}"
-                certificates:
-                  haondt-dev-default:
-                    dns_names: ["*.gabbro.local.haondt.dev", "*.haondt.dev"]
               rathole:
                 enabled: true
                 version: rathole-operator/v0.0.3

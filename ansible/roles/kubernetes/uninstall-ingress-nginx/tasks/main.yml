@@ -1,0 +1,42 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Uninstall ingress-nginx via helm
+  block:
+    - name: Uninstall ingress-nginx Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: ingress-nginx
+        chart_ref: ingress-nginx
+        chart_repo_url: https://kubernetes.github.io/ingress-nginx
+        namespace: "{{ kubernetes.ingress_nginx.namespace }}"
+        chart_version: "{{ kubernetes.ingress_nginx.version }}"
+        release_state: absent
+
+    - name: Delete namespace
+      k8s:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        state: absent
+        kind: namespace
+        name: "{{ kubernetes.ingress_nginx.namespace }}"
+  delegate_to: 127.0.0.1
+
+- name: Delete ingress-nginx Calico policies
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: absent
+    definition:
+      apiVersion: projectcalico.org/v3
+      kind: GlobalNetworkPolicy
+      metadata:
+        name: "{{ item }}"
+  loop:
+    - allow-ingress-nginx-manager-webhook
+    - allow-ingress-nginx-controller
+  delegate_to: 127.0.0.1
+  when: kubernetes.calico.enabled

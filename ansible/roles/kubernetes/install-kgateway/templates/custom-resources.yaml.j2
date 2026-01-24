@@ -6,7 +6,7 @@ metadata:
   namespace: {{ kubernetes.kgateway.namespace }}
 {% if kubernetes.cert_manager.enabled %}
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 {% endif %}
 spec:
   gatewayClassName: kgateway
@@ -46,10 +46,13 @@ spec:
     service:
 {% if kubernetes.kgateway.node_port.enabled %}
       type: NodePort
-      externalTrafficPolicy: null
-{% if kubernetes.kgateway.node_port.https is defined %}
-      nodePorts:
-        https: {{ kubernetes.kgateway.node_port.https }}
+      externalTrafficPolicy: "Cluster"
+{% if kubernetes.kgateway.node_port.ports | length > 0 %}
+      ports:
+{% for node_port, gateway_port in kubernetes.kgateway.node_port.ports.items() %}
+        - nodePort: {{ node_port }}
+          port: {{ gateway_port }}
+{% endfor %}
 {% endif %}
 {% else %}
       externalTrafficPolicy: "Local"
@@ -73,29 +76,29 @@ metadata:
   namespace: {{ kubernetes.kgateway.namespace }}
 spec:
   targetRefs:
-  - group: gateway.networking.k8s.io
-    kind: Gateway
-    name: {{ kubernetes.kgateway.gateway_name }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ kubernetes.kgateway.gateway_name }}
   accessLog:
     - fileSink:
-      path: /dev/stdout
-      jsonFormat:
-        start_time: "%START_TIME%"
-        method: "%REQ(X-ENVOY-ORIGINAL-METHOD?:METHOD)%"
-        path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
-        protocol: "%PROTOCOL%"
-        response_code: "%RESPONSE_CODE%"
-        response_flags: "%RESPONSE_FLAGS%"
-        bytes_received: "%BYTES_RECEIVED%"
-        bytes_sent: "%BYTES_SENT%"
-        total_duration: "%DURATION%"
-        resp_backend_service_time: "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"
-        req_x_forwarded_for: "%REQ(X-FORWARDED-FOR)%"
-        user_agent: "%REQ(USER-AGENT)%"
-        request_id: "%REQ(X-REQUEST-ID)%"
-        authority: "%REQ(:AUTHORITY)%"
-        backendHost: "%UPSTREAM_HOST%"
-        backendCluster: "%UPSTREAM_CLUSTER%"
+        path: /dev/stdout
+        jsonFormat:
+          start_time: "%START_TIME%"
+          method: "%REQ(X-ENVOY-ORIGINAL-METHOD?:METHOD)%"
+          path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+          protocol: "%PROTOCOL%"
+          response_code: "%RESPONSE_CODE%"
+          response_flags: "%RESPONSE_FLAGS%"
+          bytes_received: "%BYTES_RECEIVED%"
+          bytes_sent: "%BYTES_SENT%"
+          total_duration: "%DURATION%"
+          resp_backend_service_time: "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"
+          req_x_forwarded_for: "%REQ(X-FORWARDED-FOR)%"
+          user_agent: "%REQ(USER-AGENT)%"
+          request_id: "%REQ(X-REQUEST-ID)%"
+          authority: "%REQ(:AUTHORITY)%"
+          backendHost: "%UPSTREAM_HOST%"
+          backendCluster: "%UPSTREAM_CLUSTER%"
 ---
 apiVersion: gateway.kgateway.dev/v1alpha1
 kind: HTTPListenerPolicy

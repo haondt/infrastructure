@@ -6,8 +6,8 @@ local_zones:
   rhyolite: &rhyolite_ip 192.168.1.88
   rhyolite.local.haondt.dev: *rhyolite_ip
 
-  gabbro: &gabbro_ip 192.168.1.78
-  gabbro.local.haondt.dev: *gabbro_ip
+  gabbro: 192.168.1.78
+  gabbro.local.haondt.dev: 192.168.1.215
 
   aurora: 192.168.1.116
 
