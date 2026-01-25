@@ -1,5 +1,5 @@
 enabled: true
-load_balancer_ip: "192.168.1.110"
+load_balancer_ip: "[[ kubernetes.ingress_ip ]]"
 version: v2.1.2
 crds:
   version: v2.1.2
@@ -9,6 +9,3 @@ listeners:
     hostname: '*.haondt.dev'
   marble-local-haondt-dev:
     hostname: '*.marble.local.haondt.dev'
-  marble-kg-local-haondt-dev:
-    hostname: '*.marble-kg.local.haondt.dev'
-

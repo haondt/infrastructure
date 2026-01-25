@@ -1,5 +1,5 @@
 load_balancer_ip: "[[ kubernetes.ingress_ip ]]"
-enabled: true
+enabled: false
 node_port:
   enabled: false
   http: 30080
