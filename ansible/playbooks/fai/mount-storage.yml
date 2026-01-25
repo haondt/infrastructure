@@ -8,6 +8,18 @@
     name: parted
     state: present
 
+- name: Get disk info
+  community.general.parted:
+    device: "{{ resolved_disk.stdout }}"
+    unit: KiB
+    state: info
+  register: disk_info
+
+- name: Fail if disk is not empty
+  fail:
+    msg: "Disk {{ resolved_disk.stdout }} already has a partition table!"
+  when: disk_info.partitions | length > 0 or disk_info.label is defined
+
 - name: Ensure partition exists
   parted:
     device: "{{ resolved_disk.stdout }}"
@@ -15,6 +27,7 @@
     state: present
     align: optimal
     part_type: primary
+    label: gpt
 
 - name: Format partition
   filesystem:

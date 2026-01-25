@@ -1,0 +1,17 @@
+enabled: true
+version: rathole-operator/v0.0.3
+# controller_image: registry.gitlab.com/haondt/cicd/registry/rathole-controller:main-6ead3ef4
+servers:
+  chert:
+    remote_addr: "[[ SECRETS.rathole.servers.chert.basalt.remote_addr ]]"
+    transport:
+      noise:
+        remote_public_key: "[[ SECRETS.rathole.servers.chert.basalt.transport.noise.remote_public_key ]]"
+    services:
+      loki:
+        token: "[[ SECRETS.rathole.servers.chert.basalt.services.loki.token ]]"
+        local_addr: grafana-loki.deployments-grafana.svc.cluster.local:3100
+      mimir:
+        token: "[[ SECRETS.rathole.servers.chert.basalt.services.mimir.token ]]"
+        local_addr: grafana-mimir.deployments-grafana.svc.cluster.local:8080
+

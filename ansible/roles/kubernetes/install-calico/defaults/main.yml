@@ -6,3 +6,9 @@ role_defaults:
     pod_cidr: "10.42.0.0/16"
     encapsulation: "VXLANCrossSubnet"
     nat_outgoing: "Enabled"
+    ipv6:
+      enabled: false
+      blockSize: 122
+      pod_cidr: "fd42::00/64"
+      encapsulation: "VXLANCrossSubnet"
+      nat_outgoing: "Enabled"

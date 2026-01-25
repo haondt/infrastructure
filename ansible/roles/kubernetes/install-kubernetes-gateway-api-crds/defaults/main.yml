@@ -1,0 +1,4 @@
+---
+role_defaults:
+  kubernetes_gateway_api_crds:
+    version: v1.4.0

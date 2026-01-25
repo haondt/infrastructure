@@ -1,0 +1,8 @@
+tasks:
+  - type: docker-build
+    image: infrastructure-runner
+    context: .
+    file: Dockerfile
+    registries:
+      - gitlab
+

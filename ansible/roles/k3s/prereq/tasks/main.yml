@@ -1,3 +1,7 @@
+- name: Set role defaults
+  set_fact:
+    k3s: "{{ role_defaults | combine(k3s, recursive=True) }}"
+
 - name: Enable IPv4 forwarding
   ansible.posix.sysctl:
     name: net.ipv4.ip_forward
@@ -18,7 +22,30 @@
     name: fs.inotify.max_user_instances
     value: "4096"
     state: present
+    sysctl_set: true
     reload: true
+
+- name: Add systemd unit to reapply sysctl after boot
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/reload-sysctl-late.service
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Reapply sysctl after boot
+      After=multi-user.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c "/usr/bin/sleep 5; /usr/sbin/sysctl --system"
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable and start late sysctl reload
+  ansible.builtin.systemd:
+    name: reload-sysctl-late.service
+    enabled: true
+    state: started
 
 - name: Populate service facts
   ansible.builtin.service_facts:
@@ -50,8 +77,8 @@
 
 - name: Setup alternative K3s directory
   when:
-    - k3s_server_location is defined
-    - k3s_server_location != "/var/lib/rancher/k3s"
+    - k3s.server_location is defined
+    - k3s.server_location != "/var/lib/rancher/k3s"
   block:
     - name: Make rancher directory
       ansible.builtin.file:
@@ -61,7 +88,7 @@
     - name: Create symlink
       ansible.builtin.file:
         dest: /var/lib/rancher/k3s
-        src: "{{ k3s_server_location }}"
+        src: "{{ k3s.server_location }}"
         force: true
         state: link
 
@@ -98,7 +125,7 @@
       ansible.builtin.shell: |
         docker run --network host --rm ghcr.io/kube-vip/kube-vip:{{ (kube_vip_release.content | from_json).name }} manifest daemonset \
             --interface {{ node_interface }} \
-            --address {{ k3s_cluster_control_plane_ip }} \
+            --address {{ k3s.cluster_control_plane_ip }} \
             --inCluster \
             --taint \
             --controlplane \
@@ -118,7 +145,7 @@
         mode: "0644"
 
 - name: Setup extra manifests
-  when: k3s_extra_manifests is defined
+  when: k3s.extra_manifests is defined
   block:
     - name: Make manifests directory
       ansible.builtin.file:
@@ -132,10 +159,10 @@
         src: "{{ item }}"
         dest: "/var/lib/rancher/k3s/server/manifests"
         mode: "0600"
-      loop: "{{ k3s_extra_manifests }}"
+      loop: "{{ k3s.extra_manifests }}"
 
 - name: Setup optional private registry configuration
-  when: registries_config_yaml is defined
+  when: k3s.registries_config_yaml is defined
   block:
     - name: Make k3s config directory
       ansible.builtin.file:
@@ -144,6 +171,6 @@
         state: directory
     - name: Copy config values
       ansible.builtin.copy:
-        content: "{{ registries_config_yaml }}"
+        content: "{{ k3s.registries_config_yaml }}"
         dest: "/etc/rancher/k3s/registries.yaml"
         mode: "0644"

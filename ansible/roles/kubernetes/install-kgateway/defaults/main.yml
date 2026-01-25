@@ -1,0 +1,13 @@
+---
+role_defaults:
+  kgateway:
+    version: v2.1.2
+    crds:
+      version: v2.1.2
+    namespace: kgateway-system
+    gateway_name: haondt-default
+    node_port:
+      enabled: false
+      ports: {}
+    listeners: {}
+

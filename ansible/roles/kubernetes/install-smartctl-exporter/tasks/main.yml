@@ -1,0 +1,41 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install smartctl-exporter via helm
+  delegate_to: 127.0.0.1
+  block:
+    - name: Add Prometheus community Helm repo
+      kubernetes.core.helm_repository:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: prometheus-community
+        repo_url: https://prometheus-community.github.io/helm-charts
+    - name: Install smartctl-exporter Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: prometheus-smartctl-exporter
+        chart_ref: prometheus-community/prometheus-smartctl-exporter
+        release_namespace: "smartctl-exporter"
+        chart_version: "{{ kubernetes.smartctl_exporter.version }}"
+        release_state: present
+        create_namespace: true
+        values:
+          service:
+            port: 8080
+
+- name: Install alloy communication resources
+  delegate_to: 127.0.0.1
+  block:
+    - name: Template alloy custom resources
+      template:
+        src: alloy-resources.yaml.j2
+        dest: "{{ haondt.artifacts }}/smartctl-exporter-alloy-resources.yaml"
+    - name: Apply alloy custom resources
+      k8s:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        state: present
+        src: "{{ haondt.artifacts }}/smartctl-exporter-alloy-resources.yaml"

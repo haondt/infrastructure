@@ -28,6 +28,14 @@
       when: "'charon' in  components_list and kubernetes.charon.enabled"
     - role: kubernetes/install-gitlab-runner
       when: "'gitlab_runner' in  components_list and kubernetes.gitlab_runner.enabled"
+    - role: kubernetes/install-kube-state-metrics
+      when: "'kube_state_metrics' in  components_list and kubernetes.kube_state_metrics.enabled"
+    - role: kubernetes/install-infrastructure-jobs
+      when: "'infrastructure_jobs' in  components_list and kubernetes.infrastructure_jobs.enabled"
+    - role: kubernetes/install-smartctl-exporter
+      when: "'smartctl_exporter' in  components_list and kubernetes.smartctl_exporter.enabled"
+    - role: kubernetes/install-kgateway
+      when: "'kgateway' in  components_list and kubernetes.kgateway.enabled"
 
 - name: Configure kubernetes cluster (per-host)
   hosts: "{{ target_hosts }}"
@@ -49,3 +57,5 @@
       when: "'role_bindings' in  components_list"
     - role: kubernetes/configure-service-account-tokens
       when: "'service_account_tokens' in  components_list"
+    - role: kubernetes/install-argo
+      when: "'argo' in  components_list and kubernetes.argo.enabled"

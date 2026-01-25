@@ -1,0 +1,5 @@
+ansible_user: basalt
+ansible_ssh_private_key_file: [[ ssh.private_key_file ]]
+ansible_python_interpreter: /usr/bin/python3
+ssh:
+  [[ ssh | to_yaml | indent(2) ]]

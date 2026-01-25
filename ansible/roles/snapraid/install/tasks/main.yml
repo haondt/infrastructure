@@ -1,0 +1,22 @@
+---
+- name: Set role defaults
+  set_fact:
+    snapraid: "{{ role_defaults | combine(snapraid, recursive=True) }}"
+
+- name: Install snapraid package
+  become: true
+  ansible.builtin.apt:
+    state: present
+    name:
+      - snapraid
+      - smartmontools
+
+- name: 'Configure snapraid.conf'
+  become: true
+  ansible.builtin.template:
+    src: 'snapraid.conf.j2'
+    dest: '/etc/snapraid.conf'
+    owner: 'root'
+    group: 'root'
+    mode: '0640'
+

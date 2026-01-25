@@ -1,0 +1,6 @@
+---
+role_defaults:
+  infrastructure_jobs:
+    namespace: infrastructure-jobs
+    secrets: ""
+    image: registry.gitlab.com/haondt/cicd/registry/infrastructure-runner:ansible-refactor-efa5d9e6

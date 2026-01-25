@@ -1,0 +1,20 @@
+enabled: true
+version: rathole-operator/v0.0.3
+# controller_image: registry.gitlab.com/haondt/cicd/registry/rathole-controller:main-6ead3ef4
+servers:
+  chert:
+    remote_addr: "[[ SECRETS.rathole.servers.chert.marble.remote_addr ]]"
+    transport:
+      noise:
+        remote_public_key: "[[ SECRETS.rathole.servers.chert.marble.transport.noise.remote_public_key ]]"
+    services:
+      haondt:
+        token: "[[ SECRETS.rathole.servers.chert.marble.services.haondt.token ]]"
+  aeeo:
+    remote_addr: "[[ SECRETS.rathole.servers.chert.aeeo.remote_addr ]]"
+    transport:
+      noise:
+        remote_public_key: "[[ SECRETS.rathole.servers.chert.aeeo.transport.noise.remote_public_key ]]"
+    services:
+      haondt:
+        token: "[[ SECRETS.rathole.servers.chert.aeeo.services.haondt.token ]]"

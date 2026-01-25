@@ -107,6 +107,9 @@
           runtimeClassName: nvidia
           serviceMonitor:
             enabled: false
+          resources:
+            limits:
+              memory: 512Mi
     - name: Template dcgm-exporter alloy custom resources
       template:
         src: alloy-resources.yaml.j2

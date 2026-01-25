@@ -5,6 +5,8 @@ shared_role_defaults:
   default_namespace: ansible-managed
   calico:
     enabled: false
+  cert_manager:
+    enabled: false
   metallb:
     enabled: false
   ingress_nginx:
@@ -24,10 +26,25 @@ shared_role_defaults:
     enabled: false
     daemonset:
       namespace: alloy-daemonset
+      enabled: false
     deployment:
       namespace: alloy-deployment
+      enabled: false
+  argo:
+    enabled: false
   charon:
     enabled: false
   gitlab_runner:
     enabled: false
-role_defaults:
+  kube_state_metrics:
+    enabled: false
+  infrastructure_jobs:
+    enabled: false
+  smartctl_exporter:
+    enabled: false
+  kgateway:
+    enabled: false
+    node_port:
+      enabled: false
+      http: 30080
+      https: 30443

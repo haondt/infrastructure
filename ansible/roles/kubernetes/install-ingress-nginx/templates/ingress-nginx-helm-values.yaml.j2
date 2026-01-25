@@ -17,7 +17,7 @@ controller:
       kube-vip.io/loadbalancerIPs: {{ kubernetes.ingress_nginx.load_balancer_ip }}
 {% endif %}
 {% if kubernetes.metallb.enabled %}
-      metallb.io/loadbalancerIPs: {{ kubernetes.ingress_nginx.load_balancer_ip }}
+      metallb.io/loadBalancerIPs: {{ kubernetes.ingress_nginx.load_balancer_ip }}
 {% endif %}
 {% endif %}
 

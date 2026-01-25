@@ -1,0 +1,31 @@
+# Managed by ansible
+
+# First parity disk
+{% for disk in snapraid.disks.parity %}
+{% if loop.first %}
+parity {{ disk.mount }}/snapraid.parity
+{% endif %}
+{% endfor %}
+
+# Additional parity (RAID6, triple parity, etc) disks
+{% for disk in snapraid.disks.parity %}
+{% if (loop.index > 1 and loop.index <= 6) %}
+{{ loop.index }}-parity {{ disk.mount }}/snapraid.{{ loop.index }}-parity
+{% endif %}
+{% endfor %}
+
+# Content file - "You must store at least one copy for each parity disk used plus one. Using additional copies does not hurt."
+{% for disk in snapraid.disks.data %}
+content {{ disk.mount }}/snapraid.content
+{% endfor %}
+
+# Data disks
+{% for disk in snapraid.disks.data %}
+data {{ disk.label }} {{ disk.mount }}/
+{% endfor %}
+
+# Patterns
+exclude /lost+found/
+
+# Extra config
+{{ snapraid.extra_config }}

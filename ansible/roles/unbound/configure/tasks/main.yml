@@ -1,0 +1,19 @@
+---
+- name: Set role defaults
+  set_fact:
+    unbound: "{{ role_defaults | combine(unbound, recursive=True) }}"
+
+- name: 'Configure {{ unbound.config_file }}.conf'
+  become: true
+  ansible.builtin.template:
+    src: 'unbound.conf.j2'
+    dest: '/etc/unbound/unbound.conf.d/{{ unbound.config_file}}'
+    owner: 'root'
+    group: 'root'
+    mode: '0640'
+
+- name: Restart unbound
+  service:
+    name: unbound
+    state: restarted
+

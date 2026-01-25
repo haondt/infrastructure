@@ -1,0 +1,96 @@
+---
+- name: Install mergerfs
+  hosts: "{{ target_hosts }}"
+  become: true
+  any_errors_fatal: true
+  serial: 1
+  vars:
+    playbook_defaults:
+      version: 2.41.1
+      package: bookworm_amd64
+      options:
+        cache.files: auto-full
+        category.create: pfrd
+        func.getattr: newest
+        dropcacheonclose: "true"
+
+  tasks:
+    - name: Set playbooks defaults
+      set_fact:
+        mergerfs: "{{ playbook_defaults | combine(mergerfs, recursive=True) }}"
+
+    - name: Download mergerfs package
+      get_url:
+        url: "https://github.com/trapexit/mergerfs/releases/download/{{ mergerfs.version }}/mergerfs_{{ mergerfs.version }}.debian-{{ mergerfs.package }}.deb"
+        dest: "/tmp/mergerfs.deb"
+
+    - name: Install mergerfs package
+      apt:
+        deb: "/tmp/mergerfs.deb"
+
+    - name: Remove temp package
+      file:
+        path: "/tmp/mergerfs.deb"
+        state: absent
+
+    - name: Ensure branch directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop: "{{ mergerfs.branches }}"
+
+    - name: Check if mount point exists
+      stat:
+        path: "{{ mergerfs.mountpoint }}"
+      register: mountpoint_stat
+
+    - name: Create mount point if not exists
+      block:
+        - name: Install attr
+          ansible.builtin.apt:
+            name: attr
+            state: present
+        - file:
+            path: "{{ mergerfs.mountpoint }}"
+            state: directory
+            owner: root
+            group: root
+            mode: '0000'
+        - command: "setfattr -n user.mergerfs.branch_mounts_here {{ mergerfs.mountpoint }}"
+        - command: "chattr +i {{ mergerfs.mountpoint }}"
+      when: not mountpoint_stat.stat.exists
+
+    - name: Add mergerfs mount to fstab
+      mount:
+        path: "{{ mergerfs.mountpoint }}"
+        src: "{{ mergerfs.branches | join(':') }}"
+        fstype: mergerfs
+        opts: "{{ mergerfs.options.items() | map('join','=') | join(',') }}"
+        state: present
+
+    - name: Reload systemd
+      command: systemctl daemon-reload
+
+    - name: Mount mountpoint
+      command: "mount {{ mergerfs.mountpoint }}"
+
+    - name: Configure mountpoint permissions and attributes
+      block:
+        - name: Set ownership to root
+          file:
+            path: "{{ mergerfs.mountpoint }}"
+            owner: root
+            group: root
+            mode: '1777'
+
+        - name: Set mergerfs branch attribute on mountpoint
+          command: "setfattr -n user.mergerfs.branch {{ mergerfs.mountpoint }}"
+
+
+    - name: Ensure storage folder exists
+      file:
+        path: "{{ mergerfs.mountpoint }}/{{ ansible_user }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: haondt
+        mode: '0775'

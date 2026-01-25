@@ -1,0 +1,11 @@
+enabled: true
+load_balancer_ip: "[[ kubernetes.ingress_ip ]]"
+version: v2.1.2
+crds:
+  version: v2.1.2
+
+listeners:
+  haondt-dev:
+    hostname: '*.haondt.dev'
+  basalt-local-haondt-dev:
+    hostname: '*.basalt.local.haondt.dev'

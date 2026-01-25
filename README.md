@@ -37,11 +37,44 @@ The `a-fai-setup` command:
 - Requires the target host(s) to already have your SSH public key installed
 - Requires the ansible user to already be in the sudoers group
 
+### Debian commands
+
+Update a debian (fai) host
+```bash
+make a-deb-update TARGET=marble
+```
+
+Install snapraid
+```bash
+make a-deb-snapraid-install TARGET=gabbro
+```
+
+Sync or Scrub snapraid
+```bash
+make a-deb-snapraid-sync TARGET=gabbro
+make a-deb-snapraid-scrub TARGET=gabbro
+```
+
+Install mergerfs
+```bash
+make a-deb-mergerfs-install TARGET=gabbro
+```
+
+Configure Unbound
+```bash
+make a-deb-unbound-configure TARGET=flint
+```
+
 ### K3s Commands
 
 Install K3s cluster
 ```bash
 make a-k3s-install TARGET=marble
+```
+
+Update K3s cluster
+```bash
+make a-k3s-upgrade TARGET=marble
 ```
 
 Reboot K3s cluster nodes
@@ -54,16 +87,21 @@ Reset/uninstall K3s cluster
 make a-k3s-reset TARGET=marble
 ```
 
-Upgrade K3s cluster
-```bash
-make a-k3s-upgrade TARGET=marble
-```
-
 ### Kubernetes Configuration Commands
 
 Configure Kubernetes resources (service accounts, RBAC, namespaces)
 ```bash
 make a-k8s-configure TARGET=marble
+```
+
+Configure a particular Kubernetes component or multiple comma-seperated components
+```bash
+make a-k8s-configure TARGET=marble COMPONENTS=alloy,calico
+```
+
+Uninstall a particular Kubernetes component or multiple comma-seperated components
+```bash
+make a-k8s-uninstall TARGET=marble COMPONENTS=alloy,calico
 ```
 
 After running `a-k8s-configure`, you'll find kubeconfig files in `deployment/artifacts/ansible/`:

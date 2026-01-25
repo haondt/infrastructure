@@ -19,6 +19,14 @@ spec:
       encapsulation: {{ kubernetes.calico.encapsulation }}
       natOutgoing: {{ kubernetes.calico.nat_outgoing }}
       nodeSelector: all()
+{% if kubernetes.calico.ipv6.enabled %}
+    - name: default-ipv6-ippool
+      blockSize: {{ kubernetes.calico.ipv6.blockSize }}
+      cidr: {{ kubernetes.calico.ipv6.pod_cidr }}
+      encapsulation: {{ kubernetes.calico.ipv6.encapsulation }}
+      natOutgoing: {{ kubernetes.calico.ipv6.nat_outgoing }}
+      nodeSelector: all()
+{% endif %}
 
 ---
 

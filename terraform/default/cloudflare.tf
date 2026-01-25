@@ -20,4 +20,5 @@ resource "cloudflare_dns_record" "dns_records" {
   type = each.value.type
   proxied = each.value.proxied
   ttl = 1
+  comment = "tf-managed"
 }

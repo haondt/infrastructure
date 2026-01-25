@@ -1,0 +1,18 @@
+haondt.dev:
+  zone_id: [[ SECRETS.terraform['haondt.dev'].zone_id ]]
+  records:
+    - name: glance
+      type: A
+      proxied: true
+      content: [[ SECRETS.chert.host ]]
+    - name: status
+      type: A
+      proxied: true
+      content: [[ SECRETS.chert.host ]]
+[[ SECRETS.terraform.aeeo.domain ]]:
+  zone_id: [[ SECRETS.terraform.aeeo.zone_id ]]
+  records:
+    - name: [[ SECRETS.terraform.aeeo.domain ]]
+      type: A
+      proxied: true
+      content: [[ SECRETS.chert.host ]]

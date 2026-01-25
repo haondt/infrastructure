@@ -1,0 +1,38 @@
+enabled: true
+secrets: |
+  [[ SECRETS | to_yaml | indent(2) ]]
+cron_jobs:
+  gabbro-cluster-deb-update: &deb_update
+    target: a-deb-update
+    arguments:
+      TARGET: gabbro
+    schedule: "0 0 * * 0"
+    labels:
+      deployment.haondt.dev/name: gabbro-cluster-deb-update
+      deployment.haondt.dev/part-of: infrastructure-jobs
+      deployment.haondt.dev/project: infrastructure
+  marble-deb-update:
+    <<: *deb_update
+    arguments:
+      TARGET: marble
+    labels:
+      deployment.haondt.dev/name: marble-deb-update
+      deployment.haondt.dev/part-of: infrastructure-jobs
+      deployment.haondt.dev/project: infrastructure
+  chert-deb-update:
+    <<: *deb_update
+    arguments:
+      TARGET: chert
+    labels:
+      deployment.haondt.dev/name: chert-deb-update
+      deployment.haondt.dev/part-of: infrastructure-jobs
+      deployment.haondt.dev/project: infrastructure
+  gabbro-snapraid-sync:
+    target: a-deb-snapraid-sync
+    arguments:
+      TARGET: gabbro
+    schedule: "0 0 * * 3"
+    labels:
+      deployment.haondt.dev/name: gabbro-cluster-snapraid-sync
+      deployment.haondt.dev/part-of: infrastructure-jobs
+      deployment.haondt.dev/project: infrastructure

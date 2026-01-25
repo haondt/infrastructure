@@ -1,7 +1,8 @@
-# Test job
-test_job:
-  stage: .pre
-  script:
-    - echo "Hello World from the test stage!"
-    - echo "Running tests..."
-    - echo "All tests passed!"
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+include:
+  - project: 'haondt/CICD/pipelines'
+    ref: main
+    file: 'generate.yml'

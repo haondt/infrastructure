@@ -1,0 +1,18 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Template custom resources
+  delegate_to: 127.0.0.1
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/infrastructure-jobs-custom-resources.yaml"
+
+- name: Apply custom resources
+  delegate_to: 127.0.0.1
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    src: "{{ haondt.artifacts }}/infrastructure-jobs-custom-resources.yaml"

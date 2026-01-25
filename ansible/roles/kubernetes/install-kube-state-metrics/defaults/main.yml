@@ -1,0 +1,4 @@
+---
+role_defaults:
+  kube_state_metrics:
+    version: 6.3.0

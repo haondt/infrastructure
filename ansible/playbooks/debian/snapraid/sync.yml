@@ -1,0 +1,10 @@
+---
+- name: SnapRAID sync
+  hosts: "{{ target_hosts }}"
+  become: true
+  any_errors_fatal: true
+  serial: 1
+
+  tasks:
+    - name: sync
+      ansible.builtin.command: 'snapraid sync'

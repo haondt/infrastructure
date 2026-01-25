@@ -1,0 +1,5 @@
+enabled: true
+default_data_path: /mnt/okra/longhorn
+storage_classes:
+  longhorn-default:
+    allow_volume_expansion: true

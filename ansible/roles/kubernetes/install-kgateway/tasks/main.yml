@@ -1,0 +1,66 @@
+---
+- name: Set role defaults
+  set_fact:
+    kubernetes: "{{ role_defaults | combine(kubernetes, recursive=True) }}"
+
+- name: Install kgateway crds via helm
+  delegate_to: 127.0.0.1
+  block:
+    - name: Install kgateway-crds Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: kgateway-crds
+        chart_ref: oci://cr.kgateway.dev/kgateway-dev/charts/kgateway-crds
+        release_namespace: "{{ kubernetes.kgateway.namespace }}"
+        chart_version: "{{ kubernetes.kgateway.crds.version }}"
+        release_state: present
+        create_namespace: true
+
+- name: Install kgateway via helm
+  delegate_to: 127.0.0.1
+  block:
+    - name: Install kgateway Helm chart
+      kubernetes.core.helm:
+        kubeconfig: "{{ kubernetes.kubeconfig }}"
+        context: "{{ kubernetes.context }}"
+        name: kgateway
+        chart_ref: oci://cr.kgateway.dev/kgateway-dev/charts/kgateway
+        release_namespace: "{{ kubernetes.kgateway.namespace }}"
+        chart_version: "{{ kubernetes.kgateway.crds.version }}"
+        release_state: present
+        create_namespace: true
+        values:
+          controller:
+            image:
+              pullPolicy: Always
+
+- name: Template custom resources
+  delegate_to: 127.0.0.1
+  template:
+    src: custom-resources.yaml.j2
+    dest: "{{ haondt.artifacts }}/kgateway-custom-resources.yaml"
+
+- name: Apply custom resources
+  delegate_to: 127.0.0.1
+  k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
+    state: present
+    src: "{{ haondt.artifacts }}/kgateway-custom-resources.yaml"
+
+- block:
+  - name: Template kgateway Calico custom resources
+    template:
+      src: calico-resources.yaml.j2
+      dest: "{{ haondt.artifacts }}/kgateway-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+
+  - name: Apply kgateway Calico custom resources
+    k8s:
+      kubeconfig: "{{ kubernetes.kubeconfig }}"
+      context: "{{ kubernetes.context }}"
+      state: present
+      src: "{{ haondt.artifacts }}/kgateway-calico-resources.yaml"
+    delegate_to: 127.0.0.1
+  when: kubernetes.calico.enabled

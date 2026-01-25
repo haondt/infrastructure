@@ -1,0 +1,13 @@
+{% for secret_name, secret_value in kubernetes.argo.workflows.secrets.items() %}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ secret_name }}
+  namespace: argo-workflows
+  labels:
+    infra.haondt.dev/managed-by: ansible
+stringData:
+  data: |
+    {{ secret_value | indent(4) }}
+{% endfor %}

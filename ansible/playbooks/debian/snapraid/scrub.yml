@@ -1,0 +1,10 @@
+---
+- name: SnapRAID scrub
+  hosts: "{{ target_hosts }}"
+  become: true
+  any_errors_fatal: true
+  serial: 1
+
+  tasks:
+    - name: scrub
+      ansible.builtin.command: 'snapraid scrub'

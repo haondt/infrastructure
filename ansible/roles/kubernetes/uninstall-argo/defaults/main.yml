@@ -1,0 +1,7 @@
+---
+role_defaults:
+  argo:
+    workflows:
+      enabled: false
+      version: 0.45.27
+      secrets: {}
