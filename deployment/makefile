@@ -14,6 +14,11 @@ RENDER_DIRECTORY := $(SCRIPTS_DIRECTORY)/render_directory.py
 
 SSH_PRIVATE_KEY := build/id_rsa
 
+TF_TARGET := $(if $(TARGET),$(TARGET),default)
+TF_VARS_JSON := build/$(TF_TARGET).terraform.tfvars.json
+TF_DIRECTORY := ../terraform
+
+
 $(INVENTORY): $(INVENTORY_SOURCE) $(INVENTORY_SOURCE_FILES) $(INVENTORY_SOURCE_DIRECTORIES)
 	python3 $(RENDER_DIRECTORY) $(INVENTORY_SOURCE) -v SECRETS $(SECRETS_FILE) > $@
 
@@ -21,6 +26,10 @@ $(ANSIBLE_INVENTORY): $(INVENTORY)
 	@mkdir -p artifacts/ansible
 	cat $(INVENTORY) | yq '.ansible' | \
 		yq eval '.clusters.vars.haondt.artifacts = "$(shell pwd)/artifacts/ansible"' - > $@
+
+$(TF_VARS_JSON): $(INVENTORY)
+	@echo "Generating $(TF_VARS_JSON)"
+	yq eval '.terraform.$(TF_TARGET).tfvars' $(INVENTORY) -o=json > $@
 
 $(SSH_PRIVATE_KEY): $(SECRETS_FILE)
 	cat $(SECRETS_FILE) | yq '.ssh.private_key' > $@
@@ -78,11 +87,6 @@ a-fai-setup: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 		-e target_hosts=$(TARGET) \
 		--ask-pass --ask-become-pass
 
-.PHONY: a-k3s-upgrade
-a-k3s-upgrade: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
-	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/upgrade.yml \
-	    -e target_hosts=$(TARGET)
-
 .PHONY: a-k8s-uninstall
 a-k8s-uninstall: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/kubernetes/uninstall.yml \
@@ -95,4 +99,54 @@ a-k3s-install: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/install.yml \
 	    -e target_hosts=$(TARGET) \
 		-e components=$(COMPONENTS)
+
+.PHONY: a-k3s-upgrade
+a-k3s-upgrade: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/upgrade.yml \
+	    -e target_hosts=$(TARGET)
+
+.PHONY: a-k3s-reboot
+a-k3s-reboot: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/reboot.yml \
+	    -e target_hosts=$(TARGET)
+
+.PHONY: a-k3s-reset
+a-k3s-reset: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/reset.yml \
+	    -e target_hosts=$(TARGET)
+
+
+.PHONY: tf-init
+tf-init: $(TF_VARS_JSON)
+	terraform -chdir=$(TF_DIRECTORY)/$(TF_TARGET) init -var-file=../../deployment/$(TF_VARS_JSON) \
+		-backend-config="address=$$(yq eval '.terraform.$(TF_TARGET).backend_config.address' $(INVENTORY))" \
+		-backend-config="lock_address=$$(yq eval '.terraform.$(TF_TARGET).backend_config.lock_address' $(INVENTORY))" \
+		-backend-config="unlock_address=$$(yq eval '.terraform.$(TF_TARGET).backend_config.unlock_address' $(INVENTORY))" \
+		-backend-config="username=$$(yq eval '.terraform.$(TF_TARGET).backend_config.username' $(INVENTORY))" \
+		-backend-config="password=$$(yq eval '.terraform.$(TF_TARGET).backend_config.password' $(INVENTORY))" \
+		-backend-config="lock_method=$$(yq eval '.terraform.$(TF_TARGET).backend_config.lock_method' $(INVENTORY))" \
+		-backend-config="unlock_method=$$(yq eval '.terraform.$(TF_TARGET).backend_config.unlock_method' $(INVENTORY))" \
+		-backend-config="retry_wait_min=$$(yq eval '.terraform.$(TF_TARGET).backend_config.retry_wait_min' $(INVENTORY))"
+
+.PHONY: tf-validate
+tf-validate: tf-init
+	terraform -chdir=$(TF_DIRECTORY)/$(TF_TARGET) validate
+
+.PHONY: tf-plan
+tf-plan: tf-init
+	terraform -chdir=$(TF_DIRECTORY)/$(TF_TARGET) plan -out=tfplan.$(TF_TARGET).out -var-file=../../deployment/$(TF_VARS_JSON)
+
+.PHONY: tf-apply
+tf-apply: tf-init
+	terraform -chdir=$(TF_DIRECTORY)/$(TF_TARGET) apply tfplan.$(TF_TARGET).out
+
+.PHONY: tf-destroy
+tf-destroy: tf-init
+	@echo "WARNING: This will DESTROY all resources managed by this Terraform configuration!"
+	@read -p "Are you absolutely sure you want to destroy? (yes/no): " CONFIRM && [ "$$CONFIRM" = "yes" ] || exit 1
+	terraform -chdir=$(TF_DIRECTORY)/$(TF_TARGET) destroy -var-file=../deployment/$(TF_VARS_JSON)
+
+.PHONY: tf-output
+tf-output: tf-init
+	terraform -chdir=$(TF_DIRECTORY)/$(TF_TARGET) output -json
 

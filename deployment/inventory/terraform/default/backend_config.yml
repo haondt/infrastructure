@@ -4,3 +4,5 @@ unlock_address: https://gitlab.com/api/v4/projects/68409780/terraform/state/defa
 lock_method: POST
 unlock_method: DELETE
 retry_wait_min: 5
+username: [[ SECRETS.terraform.default.backend_config.username ]]
+password: [[ SECRETS.terraform.default.backend_config.password ]]
