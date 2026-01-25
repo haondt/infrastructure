@@ -4,13 +4,8 @@ version: v2.1.2
 crds:
   version: v2.1.2
 
-node_port:
-  enabled: false
-  ports:
-    30443: 443
-
 listeners:
   haondt-dev:
     hostname: '*.haondt.dev'
-  gabbro-local-haondt-dev:
-    hostname: '*.gabbro.local.haondt.dev'
+  basalt-local-haondt-dev:
+    hostname: '*.basalt.local.haondt.dev'

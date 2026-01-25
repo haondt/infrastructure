@@ -1,3 +1,7 @@
+- name: Set role defaults
+  set_fact:
+    k3s: "{{ role_defaults | combine(k3s, recursive=True) }}"
+
 - name: Enable IPv4 forwarding
   ansible.posix.sysctl:
     name: net.ipv4.ip_forward
@@ -141,7 +145,7 @@
         mode: "0644"
 
 - name: Setup extra manifests
-  when: k3s_extra_manifests is defined
+  when: k3s.extra_manifests is defined
   block:
     - name: Make manifests directory
       ansible.builtin.file:

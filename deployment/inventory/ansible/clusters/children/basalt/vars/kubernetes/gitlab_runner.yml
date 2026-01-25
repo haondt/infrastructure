@@ -1,0 +1,2 @@
+enabled: true
+runner_token: "[[ SECRETS.gitlab_runner.runner_token ]]"

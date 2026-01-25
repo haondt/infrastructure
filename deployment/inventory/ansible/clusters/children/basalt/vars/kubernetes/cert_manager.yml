@@ -1,0 +1,9 @@
+enabled: true
+version: v1.19.2
+certificates:
+  haondt-dev-default:
+    dns_names: ["*.basalt.local.haondt.dev", "*.haondt.dev"]
+acme_email: "[[ SECRETS.cert_manager.acme_email ]]"
+cloudflare_email: "[[ SECRETS.cert_manager.cloudflare_email ]]"
+cloudflare_api_token: "[[ SECRETS.cert_manager.cloudflare_api_token ]]"
+

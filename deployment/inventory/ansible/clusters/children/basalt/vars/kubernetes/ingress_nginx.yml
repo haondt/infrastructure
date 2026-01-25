@@ -1,0 +1,2 @@
+load_balancer_ip: "[[ kubernetes.ingress_ip ]]"
+enabled: false

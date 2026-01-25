@@ -1,16 +1,15 @@
 ---
 role_defaults:
-  k3s:
-    server_location: "/var/lib/rancher/k3s"
-    version: "v1.28.8+k3s1"
-    extra_server_args: ""
-    systemd_dir: "/etc/systemd/system"
-    kubeconfig: ~/.kube/config.new
-    cluster_context: "{{ target_hosts }}"
-    use_external_database: false
-    user_kubectl: true
+  server_location: "/var/lib/rancher/k3s"
+  version: "v1.28.8+k3s1"
+  extra_server_args: ""
+  systemd_dir: "/etc/systemd/system"
+  kubeconfig: ~/.kube/config.new
+  cluster_context: "{{ target_hosts }}"
+  use_external_database: false
+  user_kubectl: true
 
-    api_endpoint: "{{ hostvars[groups[target_hosts][0]]['ansible_host'] | default(groups[target_hosts][0]) }}"
-    api_port: 6443
+  api_endpoint: "{{ hostvars[groups[target_hosts][0]]['ansible_host'] | default(groups[target_hosts][0]) }}"
+  api_port: 6443
 
 

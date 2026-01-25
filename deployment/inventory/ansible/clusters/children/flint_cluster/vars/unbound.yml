@@ -11,8 +11,8 @@ local_zones:
 
   aurora: 192.168.1.116
 
-  basalt: &basalt_ip 192.168.1.139
-  basalt.local.haondt.dev: *basalt_ip
+  basalt: 192.168.1.139
+  basalt.local.haondt.dev: 192.168.1.205
 
   # control plane ip is 192.168.1.100, ingress is on 192.168.1.101
   marble.local.haondt.dev: 192.168.1.101

@@ -1,4 +1,8 @@
 ---
+- name: Set role defaults
+  set_fact:
+    k3s: "{{ role_defaults | combine(k3s, recursive=True) }}"
+
 - name: Get k3s installed version
   ansible.builtin.command: k3s --version
   register: k3s_version_output
@@ -11,7 +15,7 @@
     installed_k3s_version: "{{ k3s_version_output.stdout_lines[0].split(' ')[2] }}"
 
 - name: Download artifact
-  when: not ansible_check_mode and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
+  when: not ansible_check_mode and ( k3s_version_output.rc != 0 or installed_k3s_version is version(k3s.version, '<') )
   block:
     - name: Download K3s install script
       ansible.builtin.get_url:
@@ -23,7 +27,7 @@
         mode: "0755"
 
     - name: Download K3s binary (without node name)
-      when: k3s_node_name is not defined
+      when: k3s.node_name is not defined
       ansible.builtin.command: &k3s_install_cmd
         cmd: /usr/local/bin/k3s-install.sh
       environment: &k3s_install_env
@@ -32,7 +36,7 @@
       changed_when: true
 
     - name: Download K3s binary (with node name)
-      when: k3s_node_name is defined
+      when: k3s.node_name is defined
       ansible.builtin.command: *k3s_install_cmd
       environment:
         <<: *k3s_install_env
@@ -47,7 +51,7 @@
     line: ". <(k3s completion bash)  # Added by k3s-ansible"
 
 - name: Setup optional config file
-  when: k3s_server_config_yaml is defined
+  when: k3s.server_config_yaml is defined
   block:
     - name: Make config directory
       ansible.builtin.file:
@@ -65,7 +69,7 @@
   when: inventory_hostname == groups[target_hosts][0] or ansible_host == groups[target_hosts][0]
   block:
     - name: Copy K3s service file [Single]
-      when: groups[target_hosts] | length == 1 or k3s_use_external_database
+      when: groups[target_hosts] | length == 1 or k3s.use_external_database
       ansible.builtin.template:
         src: "k3s-single.service.j2"
         dest: "{{ k3s.systemd_dir }}/k3s.service"
@@ -77,7 +81,7 @@
     - name: Copy K3s service file [HA]
       when:
         - groups[target_hosts] | length > 1
-        - not k3s_use_external_database
+        - not k3s.use_external_database
       ansible.builtin.template:
         src: "k3s-cluster-init.service.j2"
         dest: "{{ k3s.systemd_dir }}/k3s.service"
@@ -106,7 +110,7 @@
       ansible.builtin.lineinfile:
         path: "{{ k3s.systemd_dir }}/k3s.service.env"
         line: "K3S_TOKEN={{ k3s.token }}"
-      when: k3s_token is defined
+      when: k3s.token is defined
 
     - name: Restart K3s service
       when:
@@ -192,7 +196,7 @@
             - mv_result.rc == 0
 
     - name: Get the token if randomly generated
-      when: k3s_token is not defined
+      when: k3s.token is not defined
       block:
         - name: Wait for token
           ansible.builtin.wait_for:
@@ -203,9 +207,14 @@
             src: /var/lib/rancher/k3s/server/token
           register: node_token
 
+        - name: Compute Master node-token
+          ansible.builtin.set_fact:
+            k3s_surrogate:
+              token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+
         - name: Store Master node-token
           ansible.builtin.set_fact:
-            k3s_token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+            k3s: "{{ k3s_surrogate | combine(k3s, recursive=True) }}"
 
 - name: Start other server if any and verify status
   when:
@@ -214,10 +223,15 @@
   block:
     - name: Get the token from the first server
       ansible.builtin.set_fact:
-        k3s_token: "{{ hostvars[groups[target_hosts][0]].k3s_token }}"
+        k3s_surrogate:
+          token: "{{ hostvars[groups[target_hosts][0]].k3s.token }}"
+
+    - name: Store token
+      ansible.builtin.set_fact:
+        k3s: "{{ k3s_surrogate | combine(k3s, recursive=True) }}"
 
     - name: Add service environment variables
-      when: k3s_extra_service_envs is defined
+      when: k3s.extra_service_envs is defined
       ansible.builtin.lineinfile:
         path: "{{ k3s.systemd_dir }}/k3s.service.env"
         line: "{{ item }}"
@@ -238,7 +252,7 @@
         - "K3S_TOKEN={{ k3s.token }}"
 
     - name: Copy K3s service file [HA]
-      when: not k3s_use_external_database
+      when: not k3s.use_external_database
       ansible.builtin.template:
         src: "k3s-ha.service.j2"
         dest: "{{ k3s.systemd_dir }}/k3s.service"
@@ -248,7 +262,7 @@
       register: service_file_ha
 
     - name: Copy K3s service file [External DB]
-      when: k3s_use_external_database
+      when: k3s.use_external_database
       ansible.builtin.template:
         src: "k3s-single.service.j2"
         dest: "{{ k3s.systemd_dir }}/k3s.service"
@@ -287,7 +301,7 @@
       changed_when: false
 
 - name: Setup kubectl for user
-  when: k3s_user_kubectl
+  when: k3s.user_kubectl
   block:
 
     - name: Create directory .kube
