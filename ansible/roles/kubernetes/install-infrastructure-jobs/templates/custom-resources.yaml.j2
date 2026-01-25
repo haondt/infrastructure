@@ -58,7 +58,7 @@ spec:
               - 'sh'
               - '-c'
               - |
-                git clone --branch ansible-refactor --depth 1 https://gitlab.com/haondt/infrastructure.git;
+                git clone --branch main --depth 1 https://gitlab.com/haondt/infrastructure.git;
                 cd infrastructure/deployment;
                 cat /infrastructure-secrets/data > secrets.yml;
                 make {{ cron_job.target }} {% if cron_job.arguments %}{% for k, v in cron_job.arguments.items() %} {{ k }}={{ v }}{% endfor %}{% endif %}
