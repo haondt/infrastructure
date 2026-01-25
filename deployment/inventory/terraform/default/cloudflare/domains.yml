@@ -1,0 +1,10 @@
+haondt.dev:
+  records:
+    - name: glance
+      type: A
+      proxied: true
+      content: [[ SECRETS.chert.host ]]
+    - name: status
+      type: A
+      proxied: true
+      content: [[ SECRETS.chert.host ]]
