@@ -1,5 +1,5 @@
 enabled: true
-version: v1.19.2
+version: "[[ kubernetes.cert_manager.version ]]"
 acme_email: "[[ SECRETS.cert_manager.acme_email ]]"
 cloudflare_email: "[[ SECRETS.cert_manager.cloudflare_email ]]"
 cloudflare_api_token: "[[ SECRETS.cert_manager.cloudflare_api_token ]]"
