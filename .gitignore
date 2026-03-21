@@ -1,3 +1,5 @@
+venv
+
 vars_sensitive.yaml
 deployment/secrets.yml
 
