@@ -1,2 +1,3 @@
 enabled: true
 pod_cidr: "[[ kubernetes.default_pod_cidr ]]"
+version: "[[ kubernetes.calico.version ]]"

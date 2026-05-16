@@ -75,7 +75,7 @@ spec:
     - action: Allow
       protocol: TCP
       source:
-        nets: 
+        nets:
 {% for host in groups[target_hosts] %}
           - {{ hostvars[host].ansible_host }}/32
 {% endfor %}

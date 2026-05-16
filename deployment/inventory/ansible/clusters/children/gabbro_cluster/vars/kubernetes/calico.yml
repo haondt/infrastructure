@@ -1,3 +1,4 @@
 enabled: true
+version: "[[ kubernetes.calico.version ]]"
 ipv6:
   enabled: false
