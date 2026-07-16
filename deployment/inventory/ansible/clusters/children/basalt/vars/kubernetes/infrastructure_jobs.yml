@@ -1,6 +1,8 @@
 enabled: true
 secrets: |
   [[ SECRETS | to_yaml | indent(2) ]]
+kubeconfig: |
+  [[ SECRETS.basalt.infrastructure_jobs.kubeconfig | indent(2) ]]
 cron_jobs:
   gabbro-cluster-deb-update: &deb_update
     target: a-deb-update
@@ -39,7 +41,7 @@ cron_jobs:
   gabbro-qbittorrent-restart:
     target: a-k8s-restart-deployment
     arguments:
-      CONTEXT: gabbro_cluster
+      CONTEXT: infrastructure-jobs-gabbro
       DEPLOYMENT: qbittorrent-primary
       NAMESPACE: deployments-qbittorrent
     schedule: "0 0 * * *"

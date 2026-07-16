@@ -18,6 +18,20 @@ stringData:
   data: |
     {{ kubernetes.infrastructure_jobs.secrets | indent(4) }}
 
+{% if kubernetes.infrastructure_jobs.kubeconfig is defined %}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: infrastructure-kubeconfig
+  namespace: "{{ kubernetes.infrastructure_jobs.namespace }}"
+  labels:
+    infra.haondt.dev/managed-by: ansible
+stringData:
+  config: |
+    {{ kubernetes.infrastructure_jobs.kubeconfig | indent(4) }}
+{% endif %}
+
 {% for cron_job_name, cron_job in kubernetes.infrastructure_jobs.cron_jobs.items() %}
 ---
 apiVersion: batch/v1
@@ -51,9 +65,18 @@ spec:
           containers:
           - image: {{ kubernetes.infrastructure_jobs.image }} 
             name: primary
+{% if kubernetes.infrastructure_jobs.kubeconfig is defined %}
+            env:
+            - name: KUBECONFIG
+              value: /infrastructure-kubeconfig/config
+{% endif %}
             volumeMounts:
             - mountPath: /infrastructure-secrets
               name: infrastructure-secrets
+{% if kubernetes.infrastructure_jobs.kubeconfig is defined %}
+            - mountPath: /infrastructure-kubeconfig
+              name: infrastructure-kubeconfig
+{% endif %}
             command:
               - 'sh'
               - '-c'
@@ -68,4 +91,9 @@ spec:
           - name: infrastructure-secrets
             secret:
               secretName: infrastructure-secrets
+{% if kubernetes.infrastructure_jobs.kubeconfig is defined %}
+          - name: infrastructure-kubeconfig
+            secret:
+              secretName: infrastructure-kubeconfig
+{% endif %}
 {% endfor %}
