@@ -18,6 +18,9 @@ TF_TARGET := $(if $(TARGET),$(TARGET),default)
 TF_VARS_JSON := build/$(TF_TARGET).terraform.tfvars.json
 TF_DIRECTORY := ../terraform
 
+.PHONY: clean
+clean:
+	rm -rf $(INVENTORY) $(ANSIBLE_INVENTORY) $(SSH_PRIVATE_KEY)
 
 $(INVENTORY): $(INVENTORY_SOURCE) $(INVENTORY_SOURCE_FILES) $(INVENTORY_SOURCE_DIRECTORIES)
 	python3 $(RENDER_DIRECTORY) $(INVENTORY_SOURCE) -v SECRETS $(SECRETS_FILE) > $@
@@ -80,6 +83,9 @@ a-k8s-configure: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/$$PLAYBOOK \
 		$$EXTRA -e target_hosts=$(TARGET)
 
+.PHONY: a-k8s-restart-deployment
+a-k8s-restart-deployment: $(ANSIBLE_INVENTORY)
+	kubectl rollout restart deployment $(DEPLOYMENT) --context $(CONTEXT) --namespace $(NAMESPACE)
 
 .PHONY: a-fai-setup
 a-fai-setup: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)

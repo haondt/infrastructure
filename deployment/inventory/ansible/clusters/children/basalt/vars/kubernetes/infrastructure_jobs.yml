@@ -36,3 +36,14 @@ cron_jobs:
       deployment.haondt.dev/name: gabbro-cluster-snapraid-sync
       deployment.haondt.dev/part-of: infrastructure-jobs
       deployment.haondt.dev/project: infrastructure
+  gabbro-qbittorrent-restart:
+    target: a-k8s-restart-deployment
+    arguments:
+      CONTEXT: gabbro_cluster
+      DEPLOYMENT: qbittorrent-primary
+      NAMESPACE: deployments-qbittorrent
+    schedule: "0 0 * * *"
+    labels:
+      deployment.haondt.dev/name: gabbro-cluster-qbittorrent-restart
+      deployment.haondt.dev/part-of: infrastructure-jobs
+      deployment.haondt.dev/project: infrastructure
