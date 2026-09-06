@@ -9,6 +9,21 @@ haondt.dev:
       type: A
       proxied: true
       content: [[ SECRETS.chert.host ]]
+    - name: jellyfin
+      type: A
+      proxied: false
+      content: [[ SECRETS.chert.host ]]
+    - name: api
+      type: A
+      proxied: true
+      content: [[ SECRETS.chert.host ]]
+    - name: docs
+      type: CNAME
+      proxied: false
+      content: haondt.gitlab.io
+    - name: _gitlab-pages-verification-code.docs
+      type: TXT
+      content: '"gitlab-pages-verification-code=7602a9edb736a94fe53b778fe7cc3a4d"'
 [[ SECRETS.terraform.aeeo.domain ]]:
   zone_id: [[ SECRETS.terraform.aeeo.zone_id ]]
   records:
