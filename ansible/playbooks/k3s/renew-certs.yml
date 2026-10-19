@@ -1,0 +1,8 @@
+---
+# Servers should be restarted sequentially to avoid etcd learner issues
+- name: Renew K3s certificates
+  hosts: "{{ target_hosts }}"
+  become: true
+  serial: 1
+  roles:
+    - role: k3s/renew-certs

@@ -1,0 +1,12 @@
+---
+role_defaults:
+  server_location: "/var/lib/rancher/k3s"
+  kubeconfig: ~/.kube/config
+  cluster_context: "{{ target_hosts }}"
+  api_port: 6443
+  certs:
+    renewal_days: 90
+    files:
+      - client-admin.crt
+      - serving-kube-apiserver.crt
+    refresh_kubeconfig: true

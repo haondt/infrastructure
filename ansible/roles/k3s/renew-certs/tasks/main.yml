@@ -1,0 +1,121 @@
+---
+- name: Set role defaults
+  set_fact:
+    k3s: "{{ role_defaults | combine(k3s, recursive=True) }}"
+
+# openssl -checkend exits non-zero if the cert is expired or expires within the given seconds
+- name: Check certificate expiry
+  ansible.builtin.command: >-
+    openssl x509 -noout -enddate
+    -checkend {{ k3s.certs.renewal_days * 86400 }}
+    -in {{ k3s.server_location }}/server/tls/{{ item }}
+  loop: "{{ k3s.certs.files }}"
+  register: k3s_cert_checks
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Report certificate status
+  ansible.builtin.debug:
+    msg: >-
+      {{ item.item }}:
+      {{ 'OK' if item.rc == 0 else 'EXPIRED OR WITHIN ' ~ k3s.certs.renewal_days ~ ' DAYS OF EXPIRY' }}
+      ({{ item.stdout_lines | first | default(item.stderr) }})
+  loop: "{{ k3s_cert_checks.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Determine whether certificates need renewal
+  ansible.builtin.set_fact:
+    k3s_certs_need_renewal: "{{ k3s_cert_checks.results | selectattr('rc', 'ne', 0) | list | length > 0 }}"
+
+# k3s regenerates certs on startup when they are expired or within 90 days of expiry
+- name: Restart K3s to renew certificates
+  when: k3s_certs_need_renewal
+  block:
+    - name: Restart K3s service
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted
+
+    - name: Wait for the API server to come back
+      ansible.builtin.command: kubectl get nodes
+      register: k3s_post_restart
+      until: k3s_post_restart.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    # fails the play if a cert is still expired or inside the window
+    - name: Verify certificates were renewed
+      ansible.builtin.command: >-
+        openssl x509 -noout -enddate
+        -checkend {{ k3s.certs.renewal_days * 86400 }}
+        -in {{ k3s.server_location }}/server/tls/{{ item }}
+      loop: "{{ k3s.certs.files }}"
+      changed_when: false
+      check_mode: false
+
+- name: Refresh kubeconfig
+  when: k3s.certs.refresh_kubeconfig
+  block:
+    - name: Create temporary kubeconfig on control node
+      ansible.builtin.tempfile:
+        state: file
+        prefix: k3s-kubeconfig-
+      delegate_to: 127.0.0.1
+      become: false
+      register: k3s_kubeconfig_tmp
+
+    - name: Copy kubeconfig to control node
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "{{ k3s_kubeconfig_tmp.path }}"
+        flat: true
+
+    # fetch may not preserve the 0600 mode, and this file holds admin credentials
+    - name: Restrict temporary kubeconfig permissions
+      ansible.builtin.file:
+        path: "{{ k3s_kubeconfig_tmp.path }}"
+        mode: "0600"
+      delegate_to: 127.0.0.1
+      become: false
+
+    - name: Change server address in kubeconfig on control node
+      ansible.builtin.command: >-
+        kubectl config set-cluster default
+        --server=https://{{ k3s.cluster_control_plane_ip }}:{{ k3s.api_port }}
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig_tmp.path }}"
+      delegate_to: 127.0.0.1
+      become: false
+      changed_when: true
+
+    - name: Setup kubeconfig context on control node - {{ k3s.cluster_context }}
+      ansible.builtin.replace:
+        path: "{{ k3s_kubeconfig_tmp.path }}"
+        regexp: 'default'
+        replace: '{{ k3s.cluster_context }}'
+      delegate_to: 127.0.0.1
+      become: false
+
+    # new file is listed first so its credentials win over the stale ones
+    - name: Merge with any existing kubeconfig on control node
+      ansible.builtin.shell: |
+        set -e
+        TFILE=$(mktemp)
+        export KUBECONFIG={{ k3s_kubeconfig_tmp.path }}:{{ k3s.kubeconfig }}
+        kubectl config set-context {{ k3s.cluster_context }} --user={{ k3s.cluster_context }} --cluster={{ k3s.cluster_context }}
+        kubectl config view --flatten > ${TFILE}
+        mv ${TFILE} {{ k3s.kubeconfig }}
+      delegate_to: 127.0.0.1
+      become: false
+      changed_when: true
+  always:
+    - name: Remove temporary kubeconfig from control node
+      ansible.builtin.file:
+        path: "{{ k3s_kubeconfig_tmp.path }}"
+        state: absent
+      when: k3s_kubeconfig_tmp.path is defined
+      delegate_to: 127.0.0.1
+      become: false

@@ -82,6 +82,11 @@ Reboot K3s cluster nodes
 make a-k3s-reboot TARGET=marble
 ```
 
+Renew K3s certificates (restarts k3s only if a cert is expired or within 90 days of expiry) and refresh the local kubeconfig
+```bash
+make a-k3s-renew-certs TARGET=marble
+```
+
 Reset/uninstall K3s cluster
 ```bash
 make a-k3s-reset TARGET=marble
