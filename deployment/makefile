@@ -116,6 +116,11 @@ a-k3s-reboot: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/reboot.yml \
 	    -e target_hosts=$(TARGET)
 
+.PHONY: a-k3s-renew-certs
+a-k3s-renew-certs: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
+	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/renew-certs.yml \
+	    -e target_hosts=$(TARGET)
+
 .PHONY: a-k3s-reset
 a-k3s-reset: $(SSH_PRIVATE_KEY) $(ANSIBLE_INVENTORY)
 	ANSIBLE_CONFIG=$(ANSIBLE_DIRECTORY)/ansible.cfg ansible-playbook -i $(ANSIBLE_INVENTORY) $(ANSIBLE_DIRECTORY)/playbooks/k3s/reset.yml \
