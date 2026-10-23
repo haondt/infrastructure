@@ -1,2 +1,3 @@
 enabled: true
-runner_token: "[[ SECRETS.gitlab_runner.runner_token ]]"
+runner_token: "[[ SECRETS.gitlab_runner.token ]]"
+version: v0.94.1
