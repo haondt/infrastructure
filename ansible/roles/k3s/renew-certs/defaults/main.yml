@@ -10,3 +10,4 @@ role_defaults:
       - client-admin.crt
       - serving-kube-apiserver.crt
     refresh_kubeconfig: true
+    refresh_node_kubeconfig: true

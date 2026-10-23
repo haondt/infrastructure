@@ -56,6 +56,24 @@
       changed_when: false
       check_mode: false
 
+- name: Refresh kubeconfig on node
+  when: k3s.certs.refresh_node_kubeconfig
+  block:
+    - name: Create directory .kube
+      ansible.builtin.file:
+        path: "~{{ ansible_user }}/.kube"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: "u=rwx,g=rx,o="
+
+    - name: Copy k3s.yaml to user home directory
+      ansible.builtin.copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "~{{ ansible_user }}/.kube/config"
+        remote_src: true
+        owner: "{{ ansible_user }}"
+        mode: "u=rw,g=,o="
+
 - name: Refresh kubeconfig
   when: k3s.certs.refresh_kubeconfig
   block:
