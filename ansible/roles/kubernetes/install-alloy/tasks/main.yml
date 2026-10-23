@@ -68,6 +68,7 @@
             chart_ref: grafana/alloy
             release_namespace: "{{ kubernetes.alloy.deployment.namespace }}"
             chart_version: "{{ kubernetes.alloy.version }}"
+            update_repo_cache: true
             release_state: present
             create_namespace: true
             values_files:
@@ -130,6 +131,7 @@
             chart_ref: grafana/alloy
             release_namespace: "{{ kubernetes.alloy.daemonset.namespace }}"
             chart_version: "{{ kubernetes.alloy.version }}"
+            update_repo_cache: true
             release_state: present
             create_namespace: true
             values_files:
