@@ -1,1 +1,2 @@
 enabled: true
+version: "[[ kubernetes.kube_state_metrics.version ]]"
