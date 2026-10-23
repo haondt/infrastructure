@@ -27,6 +27,7 @@
         repo_url: https://charts.gitlab.io
     - name: Install gitlab-runner Helm chart
       kubernetes.core.helm:
+        update_repo_cache: true
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
         name: gitlab-runner

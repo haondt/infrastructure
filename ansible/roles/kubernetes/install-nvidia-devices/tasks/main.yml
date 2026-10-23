@@ -73,6 +73,7 @@
         repo_url: https://nvidia.github.io/k8s-device-plugin
     - name: Install nvidia-device-plugin Helm chart
       kubernetes.core.helm:
+        update_repo_cache: true
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
         name: nvdp
@@ -95,6 +96,7 @@
         repo_url: https://nvidia.github.io/dcgm-exporter/helm-charts
     - name: Install dcgm-exporter Helm chart
       kubernetes.core.helm:
+        update_repo_cache: true
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
         name: dcgm-exporter
@@ -125,6 +127,8 @@
 
 - name: Add gpu.present label to node
   k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     definition:
       apiVersion: v1
       kind: Node
@@ -132,3 +136,4 @@
         name: "{{ inventory_hostname }}"
         labels:
           nvidia.com/gpu.present: "true"
+  delegate_to: 127.0.0.1

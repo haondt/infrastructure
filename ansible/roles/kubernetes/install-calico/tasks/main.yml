@@ -26,6 +26,7 @@
 
 - name: Wait for Tigera Operator to be ready
   k8s_info:
+    context: "{{ kubernetes.context }}"
     kubeconfig: "{{ kubernetes.kubeconfig }}"
     api_version: apps/v1
     kind: Deployment
@@ -36,6 +37,7 @@
       type: Available
       status: "True"
     wait_timeout: 300
+  delegate_to: 127.0.0.1
 
 - name: Template Calico custom resources
   template:

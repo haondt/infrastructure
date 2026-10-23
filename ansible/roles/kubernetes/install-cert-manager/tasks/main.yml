@@ -10,6 +10,7 @@
     name: cert-manager
     chart_ref: oci://quay.io/jetstack/charts/cert-manager
     chart_version: "{{ kubernetes.cert_manager.version }}"
+    update_repo_cache: true
     release_namespace: "{{ kubernetes.cert_manager.namespace }}"
     create_namespace: true
     values:
@@ -28,6 +29,8 @@
 
 - name: Create Cloudflare API token secret
   kubernetes.core.k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     definition:
       apiVersion: v1
       kind: Secret
@@ -37,9 +40,12 @@
       type: Opaque
       stringData:
         api-token: "{{ kubernetes.cert_manager.cloudflare_api_token }}"
+  delegate_to: 127.0.0.1
 
 - name: Create Let's Encrypt staging ClusterIssuer
   kubernetes.core.k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     definition:
       apiVersion: cert-manager.io/v1
       kind: ClusterIssuer
@@ -61,9 +67,12 @@
                 apiTokenSecretRef:
                   name: cloudflare-api-token
                   key: api-token
+  delegate_to: 127.0.0.1
 
 - name: Create Let's Encrypt production ClusterIssuer
   kubernetes.core.k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     definition:
       apiVersion: cert-manager.io/v1
       kind: ClusterIssuer
@@ -85,6 +94,7 @@
                 apiTokenSecretRef:
                   name: cloudflare-api-token
                   key: api-token
+  delegate_to: 127.0.0.1
 
 - name: Template cert-manager custom resources
   template:

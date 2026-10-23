@@ -1,6 +1,7 @@
 ---
 - name: Create ServiceAccount tokens
   k8s:
+    context: "{{ kubernetes.context }}"
     kubeconfig: "{{ kubernetes.kubeconfig }}"
     state: present
     definition:
@@ -15,9 +16,11 @@
           kubernetes.io/service-account.name: "{{ item.key }}"
       type: kubernetes.io/service-account-token
   loop: "{{ kubernetes.service_accounts | dict2items }}"
+  delegate_to: 127.0.0.1
 
 - name: Extract tokens
   k8s_info:
+    context: "{{ kubernetes.context }}"
     kubeconfig: "{{ kubernetes.kubeconfig }}"
     api_version: v1
     kind: Secret
@@ -25,6 +28,7 @@
     namespace: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
   register: token_secrets
   loop: "{{ kubernetes.service_accounts | dict2items }}"
+  delegate_to: 127.0.0.1
 
 - name: Generate kubeconfig files for service accounts
   template:

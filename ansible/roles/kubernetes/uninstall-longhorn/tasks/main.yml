@@ -5,6 +5,8 @@
 
 - name: Enable Longhorn uninstall confirmation
   k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: present
     definition:
       apiVersion: longhorn.io/v1beta2
@@ -13,11 +15,15 @@
         name: deleting-confirmation-flag
         namespace: longhorn-system
       value: "true"
+  delegate_to: 127.0.0.1
 
 - name: Create Longhorn uninstall job
   k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: present
     src: https://raw.githubusercontent.com/longhorn/longhorn/{{ kubernetes.longhorn.version }}/uninstall/uninstall.yaml
+  delegate_to: 127.0.0.1
 
 - name: Wait for Longhorn uninstall job to complete
   become: true
@@ -25,11 +31,17 @@
 
 - name: Remove Longhorn deployment
   k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: absent
     src: https://raw.githubusercontent.com/longhorn/longhorn/{{ kubernetes.longhorn.version }}/deploy/longhorn.yaml
+  delegate_to: 127.0.0.1
 
 - name: Remove Longhorn uninstall job
   k8s:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     state: absent
     src: https://raw.githubusercontent.com/longhorn/longhorn/{{ kubernetes.longhorn.version }}/uninstall/uninstall.yaml
+  delegate_to: 127.0.0.1
 

@@ -2,6 +2,7 @@
 
 - name: Create ClusterRoleBindings for service accounts
   k8s:
+    context: "{{ kubernetes.context }}"
     kubeconfig: "{{ kubernetes.kubeconfig }}"
     state: present
     definition:
@@ -20,4 +21,5 @@
           name: "{{ item.key }}"
           namespace: "{{ item.value.namespace | default(kubernetes.default_namespace) }}"
   loop: "{{ kubernetes.service_accounts | dict2items }}"
+  delegate_to: 127.0.0.1
 

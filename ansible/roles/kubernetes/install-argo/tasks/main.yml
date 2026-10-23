@@ -14,6 +14,7 @@
         repo_url: https://argoproj.github.io/argo-helm
     - name: Install argo-workflows Helm chart
       kubernetes.core.helm:
+        update_repo_cache: true
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
         name: argo-workflows

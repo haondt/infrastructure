@@ -29,11 +29,14 @@
 
 - name: Get coredns deployment info
   kubernetes.core.k8s_info:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     kind: Deployment
     namespace: kube-system
     name: coredns
   register: coredns_info
   run_once: true
+  delegate_to: 127.0.0.1
 
 - name: Ensure coredns has at least 2 replicas
   become: true
@@ -107,6 +110,8 @@
 
 - name: Wait for Longhorn manager DaemonSet to be ready
   kubernetes.core.k8s_info:
+    kubeconfig: "{{ kubernetes.kubeconfig }}"
+    context: "{{ kubernetes.context }}"
     api_version: apps/v1
     kind: DaemonSet
     name: longhorn-manager
@@ -115,6 +120,7 @@
   until: ds_info.resources[0].status.numberReady == ds_info.resources[0].status.desiredNumberScheduled
   retries: 60
   delay: 10
+  delegate_to: 127.0.0.1
 
 - name: Template longhorn custom resources
   template:

@@ -13,6 +13,7 @@
         repo_url: https://emberstack.github.io/helm-charts
     - name: Install reflector Helm chart
       kubernetes.core.helm:
+        update_repo_cache: true
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
         name: reflector

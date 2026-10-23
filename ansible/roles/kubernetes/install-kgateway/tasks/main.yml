@@ -8,6 +8,7 @@
   block:
     - name: Install kgateway-crds Helm chart
       kubernetes.core.helm:
+        update_repo_cache: true
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
         name: kgateway-crds
@@ -22,6 +23,7 @@
   block:
     - name: Install kgateway Helm chart
       kubernetes.core.helm:
+        update_repo_cache: true
         kubeconfig: "{{ kubernetes.kubeconfig }}"
         context: "{{ kubernetes.context }}"
         name: kgateway

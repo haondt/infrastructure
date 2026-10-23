@@ -1,6 +1,7 @@
 ---
 - name: Create service account namespaces
   k8s:
+    context: "{{ kubernetes.context }}"
     kubeconfig: "{{ kubernetes.kubeconfig }}"
     state: present
     definition:
@@ -11,4 +12,5 @@
         labels:
           infra.haondt.dev/managed-by: ansible
   loop: "{{ kubernetes.service_accounts | dict2items }}"
+  delegate_to: 127.0.0.1
 
