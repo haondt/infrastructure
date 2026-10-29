@@ -24,10 +24,6 @@ haondt.dev:
     - name: _gitlab-pages-verification-code.docs
       type: TXT
       content: '"gitlab-pages-verification-code=7602a9edb736a94fe53b778fe7cc3a4d"'
-    - name: cdn
-      type: CNAME
-      proxied: false
-      content: cdn-7sn.pages.dev
 [[ SECRETS.terraform.aeeo.domain ]]:
   zone_id: [[ SECRETS.terraform.aeeo.zone_id ]]
   records:
