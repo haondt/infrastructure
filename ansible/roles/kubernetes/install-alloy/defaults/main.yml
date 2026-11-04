@@ -6,10 +6,12 @@ role_defaults:
         enabled: false
         mounts: {}
       partial_components: {}
+      partial_configs: {}
       base_config: ''
     deployment:
       partial_components: {}
       base_config: ''
+      partial_configs: {}
     version: v1.2.1
     config_controller:
       enabled: false

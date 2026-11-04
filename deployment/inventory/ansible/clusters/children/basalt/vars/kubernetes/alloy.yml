@@ -7,8 +7,14 @@ deployment:
 
     [[ kubernetes.alloy.blackbox.scrape | indent(4) ]]
     [[ kubernetes.alloy.kube_state_metrics.scrape | indent(4) ]]
+
   partial_components:
     [[ kubernetes.alloy.blackbox.partial_components | to_yaml | indent(4) ]]
+
+  partial_configs:
+    mica: |
+      [[ kubernetes.alloy.mica.scrape | indent(6) ]]
+
 daemonset:
   enabled: true
   base_config: |

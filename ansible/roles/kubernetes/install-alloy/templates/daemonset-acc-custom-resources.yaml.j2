@@ -13,3 +13,17 @@ spec:
   label: {{ partial_component.label }}
   component: {{ partial_component.component }}
 {% endfor %}
+
+{% for k, partial_config in kubernetes.alloy.daemonset.partial_configs.items() %}
+---
+apiVersion: alloy.haondt.dev/v1
+kind: AlloyPartialConfig
+metadata:
+  name: {{ k }}
+  namespace: {{ kubernetes.alloy.config_controller.daemonset.namespace }}
+  labels:
+    deployment.haondt.dev/alloy-deployment: daemonset
+spec:
+  config: |-
+    {{ partial_config | indent(4) }}
+{% endfor %}
