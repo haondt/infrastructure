@@ -17,7 +17,7 @@ local_zones:
   # control plane ip is 192.168.1.100, ingress is on 192.168.1.101
   marble.local.haondt.dev: 192.168.1.101
 
-  mica: &mica_ip 192.168.1.151
+  mica: &mica_ip 192.168.1.154
   mica.local.haondt.dev: *mica_ip
 
 
